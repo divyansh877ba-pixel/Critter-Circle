@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-palette="emerald">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusAuth &bull; Modern Glassmorphism Authentication with Supabase</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient Glowing Background Elements -->
+  <div class="ambient-background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- Top Controls: Navigation, Supabase Config, Palette Selector & Light/Dark Theme Toggle -->
+  <header class="top-nav-bar">
+    
+    <!-- Back to Critter Circle App -->
+    <a href="index.html" class="top-back-btn" title="Back to Critter Circle Social Network">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      <span>Critter Circle</span>
+    </a>
+
+    <!-- Supabase Status Badge / Button -->
+    <button class="supabase-status-btn" id="supabaseConfigBtn" title="Supabase Connection & Database Settings">
+      <span class="status-dot" id="supabaseStatusDot"></span>
+      <span id="supabaseStatusText">Supabase</span>
+    </button>
+
+    <!-- Palette Switcher -->
+    <div class="palette-picker-container">
+      <span class="palette-label">Theme</span>
+      <div class="palette-swatches" role="radiogroup" aria-label="Color Themes">
+        <button class="palette-dot active" data-palette="emerald" title="Emerald & Mint Tech (Default)" aria-label="Emerald & Mint theme">
+          <span class="swatch swatch-emerald"></span>
+        </button>
+        <button class="palette-dot" data-palette="ocean" title="Midnight Ocean & Cyan" aria-label="Midnight Ocean theme">
+          <span class="swatch swatch-ocean"></span>
+        </button>
+        <button class="palette-dot" data-palette="sunset" title="Sunset Crimson & Amber" aria-label="Sunset Crimson theme">
+          <span class="swatch swatch-sunset"></span>
+        </button>
+        <button class="palette-dot" data-palette="violet" title="Violet Dream & Neon Pink" aria-label="Violet Dream theme">
+          <span class="swatch swatch-violet"></span>
+        </button>
+        <button class="palette-dot" data-palette="monochrome" title="Titan Monochrome" aria-label="Titanium Monochrome theme">
+          <span class="swatch swatch-monochrome"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle theme mode">
+      <svg id="themeIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+      <span id="themeLabel">Dark Mode</span>
+    </button>
+  </header>
+
+  <!-- Main Login / Auth Card Container -->
+  <main class="login-container">
+    <div class="glass-card">
+      
+      <!-- ==================================================================
+           AUTH VIEW (Sign In / Sign Up)
+           ================================================================== -->
+      <div id="authView">
+        <!-- Card Header -->
+        <header class="card-header">
+          <div class="brand-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+          </div>
+          <h1 class="card-title" id="formTitle">Welcome Back</h1>
+          <p class="card-subtitle" id="formSubtitle">Sign in to your Supabase-powered account</p>
+        </header>
+
+        <!-- Quick Mock Credentials Helper Banner -->
+        <div class="mock-credentials-banner">
+          <div class="mock-banner-head">
+            <span class="mock-pill">⚡ Mock Credentials</span>
+            <button type="button" class="btn-copy-fill" onclick="autoFillMockCredentials()" title="Automatically fill email and password">
+              ⚡ 1-Click Auto-Fill
+            </button>
+          </div>
+          <div class="mock-creds-grid">
+            <div class="mock-cred-item" onclick="copyMockField('email')" title="Click to copy email">
+              <span class="mock-label">Mock Email (Click to copy)</span>
+              <span class="mock-code">alex@example.com</span>
+            </div>
+            <div class="mock-cred-item" onclick="copyMockField('password')" title="Click to copy password">
+              <span class="mock-label">Mock Password (Click to copy)</span>
+              <span class="mock-code">Nexus@2026!</span>
+            </div>
+          </div>
+          <span class="mock-hint">⚡ Works with zero setup! Click <strong>1-Click Auto-Fill</strong> and hit <strong>Sign In</strong> to immediately test the authenticated dashboard and sync with Critter Circle.</span>
+        </div>
+
+        <!-- Auth Mode Tabs (Sign In vs Sign Up) -->
+        <div class="auth-tabs" role="tablist">
+          <button type="button" class="tab-btn active" id="tabLogin" role="tab" aria-selected="true">Sign In</button>
+          <button type="button" class="tab-btn" id="tabSignup" role="tab" aria-selected="false">Sign Up</button>
+        </div>
+
+        <!-- Auth Form -->
+        <form class="auth-form" id="authForm" novalidate>
+          
+          <!-- Full Name Field (Sign Up Only) -->
+          <div class="form-group" id="signupNameGroup" style="display: none;">
+            <label class="form-label" for="nameInput">Full Name</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <input 
+                type="text" 
+                id="nameInput" 
+                class="form-input" 
+                placeholder="Alex Carter" 
+                autocomplete="name"
+              >
+            </div>
+            <span class="field-error"></span>
+          </div>
+
+          <!-- Email Field -->
+          <div class="form-group" id="emailGroup">
+            <label class="form-label" for="emailInput">Email Address</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <input 
+                type="email" 
+                id="emailInput" 
+                class="form-input" 
+                placeholder="alex@example.com" 
+                value="alex@example.com"
+                autocomplete="email" 
+                required
+              >
+            </div>
+            <span class="field-error"></span>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group" id="passwordGroup">
+            <div class="form-label">
+              <label for="passwordInput">Password</label>
+              <a href="#" class="forgot-link" id="forgotPasswordLink">Forgot?</a>
+            </div>
+            <div class="input-wrapper">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input 
+                type="password" 
+                id="passwordInput" 
+                class="form-input" 
+                placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" 
+                value="Nexus@2026!"
+                autocomplete="current-password" 
+                required
+              >
+              <button type="button" class="password-toggle-btn" id="togglePasswordBtn" aria-label="Show password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="7" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+            <span class="field-error"></span>
+
+            <!-- Password Strength Indicator (Sign Up) -->
+            <div class="password-strength-container" id="passwordStrengthContainer">
+              <div class="strength-bars">
+                <div class="strength-bar" id="bar1"></div>
+                <div class="strength-bar" id="bar2"></div>
+                <div class="strength-bar" id="bar3"></div>
+                <div class="strength-bar" id="bar4"></div>
+              </div>
+              <div class="strength-label">
+                <span>Password strength</span>
+                <strong id="strengthText">None</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirm Password Field (Sign Up Only) -->
+          <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+            <label class="form-label" for="confirmPasswordInput">Confirm Password</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <input 
+                type="password" 
+                id="confirmPasswordInput" 
+                class="form-input" 
+                placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" 
+                autocomplete="new-password"
+              >
+              <button type="button" class="password-toggle-btn" id="toggleConfirmPasswordBtn" aria-label="Show password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
+                  <circle cx="12" cy="7" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+            <span class="field-error"></span>
+          </div>
+
+          <!-- Options: Remember Me -->
+          <div class="form-options">
+            <label class="checkbox-label" for="rememberCheckbox">
+              <input type="checkbox" id="rememberCheckbox" class="custom-checkbox" checked>
+              <span>Remember session</span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-submit" id="submitBtn">
+            <span class="btn-text" id="submitBtnText">Sign In</span>
+            <div class="spinner"></div>
+          </button>
+
+        </form>
+
+        <!-- Social Logins Section -->
+        <div class="divider">
+          <span>or continue with</span>
+        </div>
+
+        <div class="social-login-grid">
+          <!-- Google -->
+          <button type="button" class="social-btn" data-provider="google" aria-label="Sign in with Google">
+            <svg viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Google</span>
+          </button>
+
+          <!-- GitHub -->
+          <button type="button" class="social-btn" data-provider="github" aria-label="Sign in with GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+            </svg>
+            <span>GitHub</span>
+          </button>
+
+          <!-- Apple -->
+          <button type="button" class="social-btn" data-provider="apple" aria-label="Sign in with Apple">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.87-.92.04-2.02.62-2.66 1.37-.57.65-1.06 1.73-.93 2.77 1.02.08 2.06-.52 2.67-1.27z"/>
+            </svg>
+            <span>Apple</span>
+          </button>
+        </div>
+
+        <!-- Mode Switch Footer -->
+        <footer class="form-footer-switch">
+          <span id="switchModeText">Don't have an account?</span>
+          <a href="#" class="link-switch" id="switchModeLink">Sign up</a>
+        </footer>
+      </div>
+
+      <!-- ==================================================================
+           AUTHENTICATED USER DASHBOARD VIEW
+           ================================================================== -->
+      <div class="user-dashboard" id="userDashboard">
+        <div class="user-avatar" id="dashAvatar">A</div>
+        <h2 class="dashboard-name" id="dashName">Alex Carter</h2>
+        <p class="dashboard-email" id="dashEmail">alex@example.com</p>
+
+        <!-- Quick Launch to Critter Circle App -->
+        <a href="index.html" class="btn-open-feed" style="text-decoration:none; margin-bottom:14px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>✦ Open Critter Circle Feed</span>
+        </a>
+
+        <!-- Database Profile Card -->
+        <div class="dashboard-card-section">
+          <div class="section-label">
+            <span>Database &amp; Session Status</span>
+            <span class="db-pill" id="dbSyncStatus">Mock Active</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">User ID</span>
+            <span class="info-val" id="dashUserId" title="User UUID">usr_mock_alex_carter</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Last Sign In</span>
+            <span class="info-val" id="dashLastSignIn">Just now</span>
+          </div>
+
+          <!-- Edit Profile Name in Database -->
+          <div class="db-edit-group">
+            <input 
+              type="text" 
+              id="dashEditNameInput" 
+              class="form-input" 
+              placeholder="Update full name in DB" 
+              value="Alex Carter"
+              style="padding: 8px 12px; font-size: 0.85rem;"
+            >
+            <button type="button" class="btn-small-sync" id="btnUpdateProfile">Save Name</button>
+          </div>
+        </div>
+
+        <!-- Sign Out Action -->
+        <button type="button" class="btn-signout" id="btnSignOut">Sign Out</button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Forgot Password Modal -->
+  <div class="modal-backdrop" id="forgotModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <button class="modal-close-btn" id="closeModalBtn" aria-label="Close modal">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <h2 class="modal-title" id="modalTitle">Reset Password</h2>
+      <p class="modal-subtitle">Enter your email and Supabase Auth will send a secure password reset link.</p>
+
+      <form id="forgotForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="resetEmailInput">Email Address</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <input 
+              type="email" 
+              id="resetEmailInput" 
+              class="form-input" 
+              placeholder="alex@example.com" 
+              required
+            >
+          </div>
+          <span class="field-error"></span>
+        </div>
+
+        <button type="submit" class="btn-submit" id="resetSubmitBtn" style="margin-top: 18px;">
+          Send Reset Link
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Supabase Settings & Key Modal -->
+  <div class="modal-backdrop" id="supabaseModal" role="dialog" aria-modal="true" aria-labelledby="supabaseModalTitle">
+    <div class="modal-card">
+      <button class="modal-close-btn" id="closeSupabaseModalBtn" aria-label="Close modal">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <h2 class="modal-title" id="supabaseModalTitle">Supabase Connection</h2>
+      <p class="modal-subtitle">Connect your Supabase project to enable real-time authentication and database storage.</p>
+
+      <form id="supabaseConfigForm" novalidate>
+        <!-- Project URL -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" for="cfgProjectUrl">Project URL</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="cfgProjectUrl" 
+              class="form-input" 
+              placeholder="https://your-project.supabase.co" 
+              style="padding-left: 14px;"
+              required
+            >
+          </div>
+        </div>
+
+        <!-- Anon Key -->
+        <div class="form-group">
+          <label class="form-label" for="cfgAnonKey">Anon Public Key (API Key)</label>
+          <div class="input-wrapper">
+            <input 
+              type="password" 
+              id="cfgAnonKey" 
+              class="form-input" 
+              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+              style="padding-left: 14px; padding-right: 44px;"
+              required
+            >
+            <button type="button" class="password-toggle-btn" id="toggleAnonKeyBtn" aria-label="Show key">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
+                <circle cx="12" cy="7" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+          <span class="field-error"></span>
+        </div>
+
+        <p style="font-size: 0.775rem; color: var(--text-muted); margin-top: 10px; line-height: 1.4;">
+          💡 Found in Supabase Dashboard &rarr; <strong>Project Settings</strong> &rarr; <strong>API</strong> &rarr; <strong>Project API keys</strong> (<code>anon public</code>).
+        </p>
+
+        <button type="submit" class="btn-submit" id="saveSupabaseConfigBtn" style="margin-top: 18px;">
+          Connect Supabase
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Hub -->
+  <aside class="toast-container" id="toastContainer" aria-live="polite"></aside>
+
+  <!-- Fallback Helpers for Mock Credentials -->
+  <script>
+    function autoFillMockCredentials() {
+      if (window.autoFillMockCredentials) {
+        window.autoFillMockCredentials();
+      } else {
+        const emailInp = document.getElementById('emailInput');
+        const passInp = document.getElementById('passwordInput');
+        const tabLogin = document.getElementById('tabLogin');
+        if (tabLogin && !tabLogin.classList.contains('active')) tabLogin.click();
+        if (emailInp) {
+          emailInp.value = 'alex@example.com';
+          emailInp.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (passInp) {
+          passInp.value = 'Nexus@2026!';
+          passInp.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    }
+
+    function copyMockField(field) {
+      const val = field === 'email' ? 'alex@example.com' : 'Nexus@2026!';
+      if (window.copyMockField) {
+        window.copyMockField(field);
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val);
+      }
+    }
+  </script>
+
+  <!-- Supabase CDN Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Pre-configured project settings -->
+  <script src="config.js"></script>
+
+  <!-- Application Logic -->
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,5823 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Critter Circle &bull; Animal &amp; Wildlife Community</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+<!-- Supabase & Auth Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+:root{
+  --bg:#f6f5ef;
+  --card:#ffffff;
+  --card-subtle:#faf9f5;
+  --text:#26332f;
+  --text-heading:#1a2522;
+  --muted:#7c8782;
+  --muted-light:#9eaba6;
+  --line:#e6e8e3;
+  --line-subtle:#f0f2ee;
+  --green:#087f6d;
+  --green-hover:#066657;
+  --green-soft:#e3f3ef;
+  --green-light:#dff1ec;
+  --green-ring:#159a83;
+  --shadow-sm:0 2px 8px rgba(33,49,44,.05);
+  --shadow:0 4px 16px rgba(33,49,44,.07);
+  --shadow-lg:0 12px 32px rgba(33,49,44,.12);
+  --danger:#e05252;
+  --danger-soft:#fde8e8;
+  --badge-bg:#087f6d;
+  --badge-color:#ffffff;
+  --radius-sm:6px;
+  --radius-md:9px;
+  --radius-lg:14px;
+  --radius-full:9999px;
+  --transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+
+[data-theme="dark"]{
+  --bg:#101614;
+  --card:#18221f;
+  --card-subtle:#1f2b27;
+  --text:#e6ece9;
+  --text-heading:#f3f7f5;
+  --muted:#8b9b95;
+  --muted-light:#64756f;
+  --line:#263630;
+  --line-subtle:#1d2924;
+  --green:#14b89e;
+  --green-hover:#18cca0;
+  --green-soft:#18322b;
+  --green-light:#21443a;
+  --green-ring:#14b89e;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.3);
+  --shadow:0 4px 20px rgba(0,0,0,.45);
+  --shadow-lg:0 14px 36px rgba(0,0,0,.6);
+  --danger:#f87171;
+  --danger-soft:rgba(248,113,113,.15);
+  --badge-bg:#14b89e;
+  --badge-color:#0b1a16;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.5;
+  min-height:100vh;
+  transition:background-color 0.3s ease,color 0.3s ease,border-color 0.3s ease;
+  overflow-x:hidden;
+}
+
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;background:none;border:none}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+.app{min-height:100vh;display:flex;flex-direction:column}
+
+/* Topbar */
+.topbar{
+  height:60px;
+  background:var(--card);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding:0 24px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  box-shadow:var(--shadow-sm);
+  transition:var(--transition);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:190px;
+  font-weight:800;
+  font-size:15px;
+  color:var(--text-heading);
+  letter-spacing:-0.2px;
+  cursor:pointer;
+  user-select:none;
+}
+.logo{
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  background:var(--green);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:14px;
+  font-weight:900;
+  box-shadow:0 3px 10px rgba(8,127,109,.25);
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.brand:hover .logo{transform:scale(1.08) rotate(-6deg)}
+
+/* Search */
+.search-wrapper{
+  position:relative;
+  width:min(440px,42vw);
+}
+.search-icon{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:13px;
+  pointer-events:none;
+}
+.search{
+  width:100%;
+  height:38px;
+  background:var(--card-subtle);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:0 34px 0 34px;
+  outline:none;
+  font-size:12px;
+  color:var(--text);
+  transition:var(--transition);
+}
+.search:focus{
+  border-color:var(--green);
+  background:var(--card);
+  box-shadow:0 0 0 3px var(--green-soft);
+}
+.search-clear{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:12px;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  transition:var(--transition);
+}
+.search-clear:hover{background:var(--line);color:var(--text)}
+
+/* Top Actions */
+.top-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.icon-btn{
+  position:relative;
+  width:36px;
+  height:36px;
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:9px;
+  color:var(--text);
+  display:grid;
+  place-items:center;
+  font-size:14px;
+  transition:var(--transition);
+}
+.icon-btn:hover{
+  border-color:var(--green);
+  background:var(--green-soft);
+  color:var(--green);
+  transform:translateY(-1px);
+}
+.icon-btn:active{transform:scale(0.95)}
+
+.badge{
+  position:absolute;
+  top:-4px;
+  right:-4px;
+  background:var(--badge-bg);
+  color:var(--badge-color);
+  font-size:10px;
+  font-weight:700;
+  min-width:16px;
+  height:16px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 3px;
+  border:2px solid var(--card);
+  animation:badgePop 0.3s ease;
+}
+
+/* Theme Toggle Button */
+.theme-btn{
+  position:relative;
+  width:40px;
+  height:36px;
+  border-radius:9px;
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  transition:var(--transition);
+  overflow:hidden;
+}
+.theme-btn:hover{
+  border-color:var(--green);
+  background:var(--green-soft);
+  color:var(--green);
+}
+.theme-btn svg{
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.25s ease;
+}
+.theme-sun{display:none}
+.theme-moon{display:block}
+[data-theme="dark"] .theme-sun{display:block}
+[data-theme="dark"] .theme-moon{display:none}
+
+.create{
+  background:var(--green);
+  color:#fff;
+  border:0;
+  border-radius:8px;
+  width:36px;
+  height:36px;
+  font-size:22px;
+  font-weight:400;
+  display:grid;
+  place-items:center;
+  box-shadow:0 3px 10px rgba(8,127,109,.25);
+  transition:var(--transition);
+}
+.create:hover{
+  background:var(--green-hover);
+  transform:scale(1.05) rotate(90deg);
+}
+.create:active{transform:scale(0.95)}
+
+.avatar-btn{
+  border-radius:50%;
+  padding:2px;
+  border:2px solid transparent;
+  transition:var(--transition);
+  cursor:pointer;
+}
+.avatar-btn:hover,.avatar-btn.active{
+  border-color:var(--green);
+}
+.avatar{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+}
+
+/* Main Layout */
+.layout{
+  display:grid;
+  grid-template-columns:220px minmax(0,1fr) 280px;
+  gap:24px;
+  max-width:1260px;
+  margin:0 auto;
+  padding:0 20px;
+  width:100%;
+  flex:1;
+}
+
+/* Sidebar Taskbar */
+.sidebar{
+  background:var(--card);
+  min-height:calc(100vh - 60px);
+  padding:20px 10px;
+  border-right:1px solid var(--line);
+  position:sticky;
+  top:60px;
+  height:calc(100vh - 60px);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  transition:var(--transition);
+}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav button{
+  border:0;
+  background:transparent;
+  color:#56635f;
+  border-radius:9px;
+  padding:10px 14px;
+  text-align:left;
+  font-size:12.5px;
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  position:relative;
+  transition:var(--transition);
+}
+[data-theme="dark"] .nav button{color:var(--muted)}
+.nav button:hover{
+  background:var(--green-soft);
+  color:var(--green);
+  transform:translateX(3px);
+}
+.nav button.active{
+  background:var(--green-soft);
+  color:var(--green);
+  font-weight:700;
+  box-shadow:inset 3px 0 0 var(--green);
+}
+.nav button.active .nav-icon{transform:scale(1.15)}
+.nav-icon{
+  width:20px;
+  text-align:center;
+  font-size:16px;
+  transition:transform 0.25s ease;
+  display:inline-grid;
+  place-items:center;
+  flex-shrink:0;
+}
+.nav-label{
+  display:inline-block;
+  white-space:nowrap;
+  overflow:visible;
+  color:inherit;
+}
+.nav-badge{
+  margin-left:auto;
+  background:var(--green);
+  color:#fff;
+  font-size:9.5px;
+  font-weight:700;
+  padding:2px 7px;
+  border-radius:10px;
+  line-height:1.2;
+}
+
+.sidebar-footer{
+  border-top:1px solid var(--line);
+  padding-top:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.theme-row-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:11px;
+  color:var(--muted);
+  width:100%;
+  transition:var(--transition);
+}
+.theme-row-btn:hover{background:var(--green-soft);color:var(--green)}
+
+/* Main Content */
+.content{
+  padding:20px 0 60px;
+  min-width:0;
+  animation:fadeSlide 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Rightbar */
+.rightbar{padding:20px 0;width:100%}
+
+/* Cards & Generic Components */
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow);
+  transition:var(--transition);
+}
+.card:hover{
+  border-color:color-mix(in srgb, var(--green) 30%, var(--line));
+}
+
+.page-title{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:24px;
+  font-weight:700;
+  margin:0 0 16px;
+  color:var(--text-heading);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+/* Stories */
+.stories-card{
+  padding:14px 16px;
+  margin-bottom:14px;
+  position:relative;
+  overflow:hidden;
+}
+.stories-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+  font-size:11px;
+  color:var(--muted);
+  font-weight:600;
+}
+.stories{
+  display:flex;
+  gap:16px;
+  overflow-x:auto;
+  padding-bottom:4px;
+  scrollbar-width:none;
+}
+.stories::-webkit-scrollbar{display:none}
+
+.story{
+  min-width:54px;
+  text-align:center;
+  font-size:10px;
+  color:var(--text);
+  cursor:pointer;
+  transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  user-select:none;
+}
+.story:hover{transform:translateY(-3px)}
+.story:active{transform:scale(0.95)}
+.story span{
+  display:block;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:56px;
+  margin-top:4px;
+  color:var(--muted);
+}
+.story:hover span{color:var(--green);font-weight:600}
+
+.story-ring{
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  padding:2px;
+  border:2.5px solid var(--green-ring);
+  margin:0 auto;
+  position:relative;
+  background:var(--card);
+  transition:var(--transition);
+}
+.story-ring.viewed{
+  border-color:var(--line);
+  opacity:0.75;
+}
+.story-ring img{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--card);
+}
+.add-story .story-ring{
+  border:2px dashed var(--green);
+  color:var(--green);
+  display:grid;
+  place-items:center;
+  font-size:22px;
+  font-weight:300;
+  background:var(--green-soft);
+}
+.add-story:hover .story-ring{
+  background:var(--green);
+  color:#fff;
+  border-style:solid;
+  transform:rotate(90deg);
+}
+
+/* Featured Card */
+.featured-card{
+  padding:16px;
+  margin-bottom:14px;
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(145deg, var(--card) 0%, var(--green-soft) 180%);
+}
+.featured-badge{
+  color:var(--green);
+  font-weight:800;
+  font-size:9.5px;
+  letter-spacing:0.8px;
+  text-transform:uppercase;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.featured-card h2{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:18px;
+  margin:4px 0 8px;
+  color:var(--text-heading);
+}
+.featured-img-wrap{
+  position:relative;
+  border-radius:8px;
+  overflow:hidden;
+}
+.featured-card img{
+  width:100%;
+  height:170px;
+  object-fit:cover;
+  border-radius:8px;
+  transition:transform 0.5s ease;
+}
+.featured-card:hover img{transform:scale(1.02)}
+.featured-card p{
+  font-size:11px;
+  margin:9px 0 0;
+  color:var(--text);
+  line-height:1.4;
+}
+.featured-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid var(--line);
+  font-size:10px;
+}
+.btn-celebrate{
+  background:var(--green);
+  color:#fff;
+  border-radius:6px;
+  padding:5px 12px;
+  font-size:10px;
+  font-weight:600;
+  transition:var(--transition);
+}
+.btn-celebrate:hover{background:var(--green-hover);transform:scale(1.03)}
+
+/* Feed Filter Tabs */
+.feed-tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:14px;
+  overflow-x:auto;
+  padding-bottom:4px;
+  scrollbar-width:none;
+}
+.feed-tabs::-webkit-scrollbar{display:none}
+.feed-tab{
+  padding:6px 14px;
+  border-radius:20px;
+  border:1px solid var(--line);
+  background:var(--card);
+  font-size:11px;
+  font-weight:600;
+  color:var(--muted);
+  white-space:nowrap;
+  transition:var(--transition);
+}
+.feed-tab:hover{
+  border-color:var(--green);
+  color:var(--green);
+}
+.feed-tab.active{
+  background:var(--green);
+  color:#fff;
+  border-color:var(--green);
+  box-shadow:0 2px 8px rgba(8,127,109,.25);
+}
+
+/* Post Card */
+.post{
+  overflow:hidden;
+  margin-bottom:16px;
+  position:relative;
+  transition:var(--transition);
+}
+.post-head{
+  display:flex;
+  align-items:center;
+  padding:12px 14px;
+  gap:10px;
+}
+.post-head img{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
+  border:1px solid var(--line);
+}
+.user-meta{flex:1;font-size:11px}
+.user-meta strong{
+  font-size:12px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  color:var(--text-heading);
+}
+.user-meta strong:hover{color:var(--green);cursor:pointer}
+.user-meta span{color:var(--muted);font-size:10px}
+.post-menu-wrap{position:relative}
+.more{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:18px;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  transition:var(--transition);
+}
+.more:hover{background:var(--green-soft);color:var(--green)}
+.post-dropdown{
+  position:absolute;
+  right:0;
+  top:100%;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:8px;
+  box-shadow:var(--shadow-lg);
+  min-width:140px;
+  z-index:50;
+  display:none;
+  padding:4px;
+  animation:fadeSlide 0.2s ease;
+}
+.post-dropdown.show{display:block}
+.post-dropdown button{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  padding:8px 10px;
+  border-radius:6px;
+  font-size:11px;
+  color:var(--text);
+  text-align:left;
+  transition:var(--transition);
+}
+.post-dropdown button:hover{background:var(--green-soft);color:var(--green)}
+.post-dropdown button.danger:hover{background:var(--danger-soft);color:var(--danger)}
+
+.post-media-container{
+  position:relative;
+  cursor:pointer;
+  user-select:none;
+  overflow:hidden;
+  background:var(--card-subtle);
+}
+.post-image{
+  display:block;
+  width:100%;
+  height:410px;
+  object-fit:cover;
+  transition:transform 0.4s ease;
+}
+.post:hover .post-image{transform:scale(1.01)}
+
+/* Double Click Heart Animation */
+.floating-heart{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  font-size:75px;
+  color:#fff;
+  text-shadow:0 4px 20px rgba(0,0,0,0.5);
+  pointer-events:none;
+  z-index:10;
+}
+.floating-heart.pop{
+  animation:heartBurst 0.85s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+}
+
+.post-body{padding:12px 14px 14px}
+.actions{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:8px;
+}
+.action{
+  border:0;
+  background:transparent;
+  padding:0;
+  color:var(--text);
+  font-size:15px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  transition:var(--transition);
+}
+.action:hover{color:var(--green);transform:translateY(-1px)}
+.action.liked{
+  color:var(--green);
+  animation:heartBounce 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+.action.saved{
+  color:var(--green);
+  animation:bookmarkSpring 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+.save{margin-left:auto}
+
+.likes{
+  font-size:11px;
+  font-weight:700;
+  margin-bottom:6px;
+  color:var(--text-heading);
+}
+.caption{
+  font-size:11.5px;
+  line-height:1.5;
+  color:var(--text);
+  margin-bottom:8px;
+}
+.caption b{color:var(--text-heading);margin-right:4px}
+.tags{
+  display:inline-block;
+  color:var(--green);
+  font-size:11px;
+  margin-top:3px;
+  font-weight:500;
+  cursor:pointer;
+}
+.tags:hover{text-decoration:underline}
+
+/* Comments Section */
+.comments-toggle{
+  font-size:11px;
+  color:var(--muted);
+  cursor:pointer;
+  margin-bottom:8px;
+  display:inline-block;
+}
+.comments-toggle:hover{color:var(--green)}
+
+.comments-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:6px;
+  margin-bottom:10px;
+}
+.comment{
+  background:var(--card-subtle);
+  border:1px solid var(--line-subtle);
+  border-radius:7px;
+  padding:8px 10px;
+  font-size:10.5px;
+  color:var(--text);
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+  animation:fadeSlide 0.3s ease;
+}
+.comment-user{font-weight:700;color:var(--text-heading);margin-right:4px}
+.comment-text{flex:1;line-height:1.35}
+.comment-like-btn{
+  color:var(--muted);
+  font-size:11px;
+  padding:2px 4px;
+}
+.comment-like-btn.liked{color:var(--green)}
+
+.comment-input-wrap{
+  margin-top:8px;
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.comment-input{
+  flex:1;
+  border:1px solid var(--line);
+  background:var(--card-subtle);
+  border-radius:8px;
+  padding:8px 12px;
+  font-size:11px;
+  outline:none;
+  color:var(--text);
+  transition:var(--transition);
+}
+.comment-input:focus{
+  border-color:var(--green);
+  background:var(--card);
+  box-shadow:0 0 0 2px var(--green-soft);
+}
+.comment-btn{
+  border:0;
+  background:var(--green);
+  color:#fff;
+  border-radius:7px;
+  padding:8px 14px;
+  font-size:10.5px;
+  font-weight:700;
+  transition:var(--transition);
+}
+.comment-btn:hover{background:var(--green-hover);transform:scale(1.02)}
+.comment-btn:disabled{opacity:0.5;cursor:not-allowed}
+
+/* Kind Quick Reactions */
+.kind-chips{
+  display:flex;
+  gap:6px;
+  margin-top:6px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.kind-chips::-webkit-scrollbar{display:none}
+.kind-chip{
+  font-size:9.5px;
+  padding:3px 8px;
+  border-radius:12px;
+  background:var(--green-soft);
+  color:var(--green);
+  border:1px solid transparent;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:var(--transition);
+}
+.kind-chip:hover{
+  background:var(--green);
+  color:#fff;
+  transform:scale(1.04);
+}
+
+/* Rightbar Panels */
+.panel{
+  padding:15px;
+  margin-bottom:14px;
+}
+.panel h3{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:15px;
+  font-weight:700;
+  margin:0 0 12px;
+  color:var(--text-heading);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.suggest{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:10px 0;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--line-subtle);
+}
+.suggest:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.suggest img{width:32px;height:32px;border-radius:50%;object-fit:cover}
+.suggest-info{flex:1;font-size:10px}
+.suggest-info strong{
+  display:block;
+  font-size:11px;
+  color:var(--text-heading);
+}
+.suggest-info span{color:var(--muted)}
+.follow{
+  border:1px solid color-mix(in srgb, var(--green) 40%, var(--line));
+  background:var(--card);
+  color:var(--green);
+  border-radius:6px;
+  font-size:9px;
+  font-weight:700;
+  padding:5px 9px;
+  transition:var(--transition);
+}
+.follow:hover{
+  background:var(--green);
+  color:#fff;
+  border-color:var(--green);
+  transform:scale(1.03);
+}
+.follow.following{
+  background:var(--green-soft);
+  color:var(--green);
+  border-color:var(--green);
+}
+
+.trend{
+  font-size:10px;
+  margin:10px 0;
+  cursor:pointer;
+  padding:6px 8px;
+  border-radius:6px;
+  transition:var(--transition);
+}
+.trend:hover{background:var(--green-soft)}
+.trend b{
+  display:block;
+  font-size:11px;
+  color:var(--text-heading);
+}
+.trend span{color:var(--muted)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  font-size:9.5px;
+  border:1px solid var(--line);
+  background:var(--card-subtle);
+  padding:5px 9px;
+  border-radius:14px;
+  color:var(--text);
+  cursor:pointer;
+  transition:var(--transition);
+}
+.chip:hover,.chip.active{
+  border-color:var(--green);
+  background:var(--green-soft);
+  color:var(--green);
+  transform:translateY(-1px);
+}
+
+.tip{
+  background:var(--green-soft);
+  border:1px solid var(--green-light);
+  padding:14px;
+  border-radius:var(--radius-md);
+  font-size:10.5px;
+  line-height:1.45;
+  color:var(--text);
+}
+.tip small{
+  color:var(--green);
+  font-weight:800;
+  font-size:9px;
+  letter-spacing:0.5px;
+  display:block;
+  margin-bottom:2px;
+}
+.tip b{
+  display:block;
+  font-size:12px;
+  margin-bottom:4px;
+  color:var(--text-heading);
+}
+
+/* Explore Page */
+.explore-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+.explore-item{
+  position:relative;
+  aspect-ratio:1;
+  border-radius:8px;
+  overflow:hidden;
+  cursor:pointer;
+  background:var(--card-subtle);
+}
+.explore-item img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transition:transform 0.4s ease;
+}
+.explore-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  color:#fff;
+  font-size:12px;
+  font-weight:700;
+  opacity:0;
+  transition:opacity 0.25s ease;
+}
+.explore-item:hover img{transform:scale(1.08)}
+.explore-item:hover .explore-overlay{opacity:1}
+
+/* Following Page */
+.following-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--card);
+  padding:14px 18px;
+  border-radius:var(--radius-md);
+  border:1px solid var(--line);
+  margin-bottom:16px;
+}
+.followed-avatars{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  overflow-x:auto;
+  padding:4px 0;
+}
+.followed-circle-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  cursor:pointer;
+  min-width:60px;
+}
+.followed-circle-item img{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--green);
+  transition:transform 0.2s ease;
+}
+.followed-circle-item:hover img{transform:scale(1.08)}
+.followed-circle-item span{font-size:9.5px;color:var(--muted);white-space:nowrap}
+
+/* Notifications Page */
+.notif-tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:14px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:10px;
+}
+.notif-tab{
+  padding:5px 12px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:600;
+  color:var(--muted);
+  transition:var(--transition);
+}
+.notif-tab:hover{color:var(--green);background:var(--green-soft)}
+.notif-tab.active{background:var(--green-soft);color:var(--green)}
+
+.notif-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  border-bottom:1px solid var(--line-subtle);
+  transition:var(--transition);
+  cursor:pointer;
+  position:relative;
+}
+.notif-item:hover{background:var(--card-subtle)}
+.notif-item.unread{background:var(--green-soft)}
+.notif-item img{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  object-fit:cover;
+}
+.notif-content{flex:1;font-size:11px}
+.notif-content strong{color:var(--text-heading)}
+.notif-content span{color:var(--muted);display:block;font-size:9.5px;margin-top:2px}
+.notif-thumb{
+  width:38px;
+  height:38px;
+  border-radius:6px;
+  object-fit:cover;
+}
+.notif-icon-bubble{
+  position:absolute;
+  left:36px;
+  top:30px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:var(--green);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:9px;
+  border:2px solid var(--card);
+}
+
+/* Messages Page */
+.chat-back-btn{
+  display:none;
+  border:0;
+  background:var(--green-soft);
+  color:var(--green);
+  font-size:11.5px;
+  font-weight:700;
+  padding:5px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  align-items:center;
+  gap:4px;
+  transition:var(--transition);
+}
+.chat-back-btn:hover{background:var(--green);color:#fff}
+
+.chat-container{
+  display:grid;
+  grid-template-columns:260px 1fr;
+  height:580px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.chat-sidebar{
+  border-right:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  background:var(--card-subtle);
+}
+.chat-sidebar-header{
+  padding:12px 14px;
+  border-bottom:1px solid var(--line);
+  font-weight:700;
+  font-size:13px;
+  color:var(--text-heading);
+}
+.chat-list{
+  overflow-y:auto;
+  flex:1;
+}
+.chat-user{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  cursor:pointer;
+  border-bottom:1px solid var(--line-subtle);
+  transition:var(--transition);
+}
+.chat-user:hover{background:var(--card)}
+.chat-user.active{background:var(--green-soft);border-left:3px solid var(--green)}
+.chat-user-avatar{
+  position:relative;
+}
+.chat-user-avatar img{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  object-fit:cover;
+}
+.online-dot{
+  position:absolute;
+  bottom:0;
+  right:0;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#10b981;
+  border:2px solid var(--card);
+}
+.chat-user-info{
+  flex:1;
+  min-width:0;
+}
+.chat-user-info strong{
+  font-size:11px;
+  color:var(--text-heading);
+  display:block;
+}
+.chat-user-info span{
+  font-size:9.5px;
+  color:var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  display:block;
+}
+
+.chat-main{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+.chat-header{
+  padding:12px 16px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:var(--card);
+}
+.chat-header img{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
+}
+.chat-header-info strong{
+  font-size:12px;
+  display:block;
+  color:var(--text-heading);
+}
+.chat-header-info span{
+  font-size:9.5px;
+  color:var(--green);
+  font-weight:600;
+}
+.chat-messages{
+  flex:1;
+  padding:16px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  background:var(--bg);
+}
+.bubble{
+  max-width:70%;
+  padding:9px 13px;
+  border-radius:14px;
+  font-size:11px;
+  line-height:1.4;
+  position:relative;
+  animation:fadeSlide 0.25s ease;
+}
+.bubble.received{
+  background:var(--card);
+  border:1px solid var(--line);
+  color:var(--text);
+  align-self:flex-start;
+  border-bottom-left-radius:3px;
+}
+.bubble.sent{
+  background:var(--green);
+  color:#fff;
+  align-self:flex-end;
+  border-bottom-right-radius:3px;
+}
+.bubble-time{
+  font-size:8.5px;
+  opacity:0.75;
+  margin-top:3px;
+  text-align:right;
+}
+.typing-indicator{
+  align-self:flex-start;
+  font-size:10px;
+  color:var(--muted);
+  font-style:italic;
+  padding:4px 8px;
+  display:none;
+}
+.chat-input-bar{
+  padding:10px 14px;
+  background:var(--card);
+  border-top:1px solid var(--line);
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.chat-input{
+  flex:1;
+  border:1px solid var(--line);
+  background:var(--card-subtle);
+  border-radius:20px;
+  padding:8px 14px;
+  font-size:11px;
+  outline:none;
+  color:var(--text);
+}
+.chat-input:focus{border-color:var(--green);background:var(--card)}
+.chat-send-btn{
+  background:var(--green);
+  color:#fff;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  font-size:12px;
+  transition:var(--transition);
+}
+.chat-send-btn:hover{background:var(--green-hover);transform:scale(1.06)}
+
+/* Profile Page */
+.profile-card{
+  padding:22px;
+  margin-bottom:16px;
+  position:relative;
+}
+.profile-top{
+  display:flex;
+  gap:20px;
+  align-items:center;
+}
+.profile-avatar-wrap{
+  position:relative;
+}
+.profile-avatar{
+  width:88px;
+  height:88px;
+  border-radius:50%;
+  object-fit:cover;
+  border:3px solid var(--card);
+  box-shadow:var(--shadow);
+}
+.avatar-badge{
+  position:absolute;
+  bottom:2px;
+  right:2px;
+  background:var(--green);
+  color:#fff;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-size:10px;
+  border:2px solid var(--card);
+}
+.profile-info{flex:1}
+.profile-info h2{
+  font-family:"Playfair Display",Georgia,serif;
+  margin:0 0 4px;
+  font-size:22px;
+  color:var(--text-heading);
+}
+.profile-info p{
+  margin:0 0 10px;
+  color:var(--muted);
+  font-size:11.5px;
+  line-height:1.4;
+}
+.profile-stats{
+  display:flex;
+  gap:28px;
+  margin-top:14px;
+  font-size:11px;
+}
+.profile-stats b{
+  font-size:15px;
+  display:block;
+  color:var(--text-heading);
+}
+.profile-actions{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+.edit-btn{
+  border:1px solid color-mix(in srgb, var(--green) 40%, var(--line));
+  background:var(--card);
+  color:var(--green);
+  border-radius:7px;
+  padding:7px 14px;
+  font-size:11px;
+  font-weight:700;
+  transition:var(--transition);
+}
+.edit-btn:hover{
+  background:var(--green);
+  color:#fff;
+  border-color:var(--green);
+  transform:scale(1.02);
+}
+
+.profile-tabs{
+  display:flex;
+  border-bottom:1px solid var(--line);
+  margin-bottom:14px;
+}
+.profile-tab{
+  flex:1;
+  text-align:center;
+  padding:10px 0;
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--muted);
+  border-bottom:2px solid transparent;
+  transition:var(--transition);
+}
+.profile-tab:hover{color:var(--green)}
+.profile-tab.active{
+  color:var(--green);
+  border-bottom-color:var(--green);
+  font-weight:700;
+}
+
+/* Settings Page */
+.settings-section{
+  padding:18px;
+  margin-bottom:14px;
+}
+.settings-section h3{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:16px;
+  color:var(--text-heading);
+  margin-bottom:14px;
+  border-bottom:1px solid var(--line-subtle);
+  padding-bottom:8px;
+}
+.setting-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid var(--line-subtle);
+}
+.setting-row:last-child{border-bottom:none}
+.setting-info strong{
+  font-size:12px;
+  color:var(--text-heading);
+  display:block;
+}
+.setting-info span{
+  font-size:10px;
+  color:var(--muted);
+}
+.toggle-switch{
+  position:relative;
+  width:44px;
+  height:24px;
+  background:var(--line);
+  border-radius:12px;
+  cursor:pointer;
+  transition:var(--transition);
+}
+.toggle-switch.on{background:var(--green)}
+.toggle-knob{
+  position:absolute;
+  top:2px;
+  left:2px;
+  width:20px;
+  height:20px;
+  background:#fff;
+  border-radius:50%;
+  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow:0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch.on .toggle-knob{transform:translateX(20px)}
+
+/* Create Post Page / Modal */
+.create-card{
+  padding:20px;
+  margin-bottom:16px;
+}
+.create-card h3{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:18px;
+  margin-bottom:12px;
+  color:var(--text-heading);
+}
+.form-group{margin-bottom:12px}
+.form-group label{
+  display:block;
+  font-size:11px;
+  font-weight:600;
+  color:var(--muted);
+  margin-bottom:4px;
+}
+.form-control{
+  width:100%;
+  border:1px solid var(--line);
+  background:var(--card-subtle);
+  border-radius:8px;
+  padding:8px 12px;
+  font-size:11.5px;
+  color:var(--text);
+  outline:none;
+  transition:var(--transition);
+}
+.form-control:focus{
+  border-color:var(--green);
+  background:var(--card);
+  box-shadow:0 0 0 2px var(--green-soft);
+}
+textarea.form-control{
+  min-height:90px;
+  resize:vertical;
+}
+.preset-images{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:6px 0;
+}
+.preset-thumb{
+  width:58px;
+  height:58px;
+  border-radius:6px;
+  object-fit:cover;
+  cursor:pointer;
+  border:2px solid transparent;
+  transition:var(--transition);
+}
+.preset-thumb:hover{transform:scale(1.05)}
+.preset-thumb.selected{border-color:var(--green);transform:scale(1.05)}
+
+/* Modals */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(4px);
+  z-index:200;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.25s ease;
+}
+.modal-overlay.open{
+  opacity:1;
+  pointer-events:auto;
+}
+.modal-box{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  width:min(500px,94vw);
+  max-height:85vh;
+  overflow-y:auto;
+  padding:22px;
+  transform:scale(0.94);
+  transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.modal-overlay.open .modal-box{transform:scale(1)}
+.modal-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
+}
+.modal-header h3{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:18px;
+  color:var(--text-heading);
+}
+.modal-close{
+  font-size:18px;
+  color:var(--muted);
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  transition:var(--transition);
+}
+.modal-close:hover{background:var(--green-soft);color:var(--green)}
+
+/* Stories Viewer Modal */
+.story-viewer-modal{
+  position:fixed;
+  inset:0;
+  background:#050908;
+  z-index:300;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+}
+.story-viewer-modal.open{display:flex}
+.story-viewer-container{
+  width:min(420px,96vw);
+  height:min(720px,90vh);
+  position:relative;
+  background:#000;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 10px 40px rgba(0,0,0,0.8);
+}
+.story-viewer-progress-bar{
+  position:absolute;
+  top:10px;
+  left:10px;
+  right:10px;
+  height:3px;
+  background:rgba(255,255,255,0.3);
+  border-radius:3px;
+  z-index:20;
+  overflow:hidden;
+}
+.story-viewer-progress-fill{
+  height:100%;
+  width:0%;
+  background:#fff;
+  transition:width 0.1s linear;
+}
+.story-viewer-head{
+  position:absolute;
+  top:22px;
+  left:14px;
+  right:14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  z-index:20;
+  color:#fff;
+  text-shadow:0 1px 4px rgba(0,0,0,0.6);
+}
+.story-viewer-head img{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:2px solid #fff;
+  object-fit:cover;
+}
+.story-viewer-head strong{font-size:12px}
+.story-viewer-head span{font-size:10px;opacity:0.8}
+.story-viewer-close{
+  margin-left:auto;
+  color:#fff;
+  font-size:22px;
+  background:rgba(0,0,0,0.3);
+  border-radius:50%;
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+}
+.story-viewer-img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.story-viewer-caption{
+  position:absolute;
+  bottom:20px;
+  left:14px;
+  right:14px;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(8px);
+  padding:12px 14px;
+  border-radius:10px;
+  color:#fff;
+  font-size:12px;
+  z-index:20;
+}
+.story-nav-btn{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(255,255,255,0.2);
+  color:#fff;
+  font-size:24px;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  z-index:30;
+  transition:var(--transition);
+}
+.story-nav-btn:hover{background:rgba(255,255,255,0.4)}
+.story-nav-prev{left:10px}
+.story-nav-next{right:10px}
+
+/* Toast Notifications */
+.toast-container{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  z-index:100000;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  pointer-events:none;
+}
+.toast{
+  background:var(--card);
+  border:1px solid var(--line);
+  color:var(--text);
+  padding:12px 18px;
+  border-radius:9px;
+  box-shadow:var(--shadow-lg);
+  font-size:11.5px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  pointer-events:auto;
+  animation:toastSlide 0.35s cubic-bezier(0.16,1,0.3,1);
+  min-width:240px;
+}
+.toast-icon{
+  color:var(--green);
+  font-size:16px;
+}
+.toast-close{
+  margin-left:auto;
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* Animations */
+@keyframes fadeSlide{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes toastSlide{
+  from{opacity:0;transform:translateY(24px) scale(0.95)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes heartBurst{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:0}
+  40%{transform:translate(-50%,-50%) scale(1.3);opacity:1}
+  70%{transform:translate(-50%,-50%) scale(1.1);opacity:0.9}
+  100%{transform:translate(-50%,-70%) scale(1.2);opacity:0}
+}
+@keyframes heartBounce{
+  0%{transform:scale(1)}
+  35%{transform:scale(1.4) rotate(-10deg)}
+  65%{transform:scale(0.9) rotate(5deg)}
+  100%{transform:scale(1) rotate(0deg)}
+}
+@keyframes bookmarkSpring{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.35) translateY(-2px)}
+  75%{transform:scale(0.92) translateY(1px)}
+  100%{transform:scale(1) translateY(0)}
+}
+@keyframes badgePop{
+  0%{transform:scale(0)}
+  80%{transform:scale(1.25)}
+  100%{transform:scale(1)}
+}
+
+/* ==========================================================================
+   Multi-Device Responsive Design & Full Text Taskbars
+   ========================================================================== */
+
+/* Laptop / Medium Desktop / Tablet Landscape (821px - 1100px) */
+@media(max-width:1100px){
+  .layout{
+    grid-template-columns:200px minmax(0,1fr);
+    gap:20px;
+    padding:0 16px;
+  }
+  .rightbar{display:none}
+  .search-wrapper{width:min(360px,38vw)}
+}
+
+/* Tablet Portrait & Mobile Devices (<= 820px) */
+@media(max-width:820px){
+  .layout{
+    display:block;
+    padding:0 12px;
+    max-width:100%;
+  }
+  .rightbar{display:none}
+
+  /* Fixed Mobile Bottom Taskbar with FULL TEXT */
+  .sidebar{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    top:auto;
+    height:64px;
+    min-height:0;
+    width:100%;
+    border-right:0;
+    border-top:1px solid var(--line);
+    z-index:150;
+    padding:4px 6px calc(4px + env(safe-area-inset-bottom, 0px));
+    flex-direction:row;
+    background:var(--card);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 -4px 20px rgba(0,0,0,0.07);
+    justify-content:center;
+  }
+  .sidebar-footer{display:none}
+
+  /* Taskbar Navigation Container */
+  .nav{
+    flex-direction:row;
+    align-items:stretch;
+    width:100%;
+    max-width:640px;
+    margin:0 auto;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+    gap:2px;
+    padding:0 2px;
+  }
+  .nav::-webkit-scrollbar{display:none}
+
+  /* Taskbar Buttons: Icon + FULL TEXT visible */
+  .nav button{
+    flex:1 0 auto;
+    min-width:58px;
+    max-width:78px;
+    height:100%;
+    padding:4px 2px;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    border-radius:8px;
+    text-align:center;
+    position:relative;
+    box-shadow:none !important;
+  }
+  .nav button:hover{
+    transform:none;
+  }
+  .nav button.active{
+    background:var(--green-soft);
+    color:var(--green);
+  }
+  .nav button.active .nav-icon{
+    transform:scale(1.12);
+  }
+  .nav-icon{
+    width:auto;
+    font-size:17px;
+    line-height:1;
+    margin:0;
+  }
+  /* TEXT APPEARS FULLY IN TASKBAR */
+  .nav-label{
+    display:block !important;
+    font-size:10px;
+    font-weight:600;
+    white-space:nowrap;
+    line-height:1.1;
+    text-align:center;
+    color:inherit;
+    letter-spacing:-0.2px;
+  }
+  .nav-badge{
+    position:absolute;
+    top:2px;
+    right:calc(50% - 15px);
+    margin-left:0;
+    min-width:14px;
+    height:14px;
+    font-size:8px;
+    padding:0 3px;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* Safe content spacing above fixed taskbar */
+  .content{
+    padding:14px 0 calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Post scaling */
+  .post-image{
+    height:360px;
+  }
+
+  /* Messenger Mobile Responsiveness */
+  .chat-container{
+    display:flex;
+    height:520px;
+  }
+  .chat-container.mobile-list-view .chat-sidebar{
+    display:flex;
+    width:100%;
+    flex:1;
+  }
+  .chat-container.mobile-list-view .chat-main{
+    display:none;
+  }
+  .chat-container.mobile-chat-view .chat-sidebar{
+    display:none;
+  }
+  .chat-container.mobile-chat-view .chat-main{
+    display:flex;
+    width:100%;
+    flex:1;
+  }
+  .chat-back-btn{
+    display:inline-flex;
+  }
+}
+
+/* Standard Mobile Phones (<= 640px) */
+@media(max-width:640px){
+  .topbar{
+    height:56px;
+    padding:0 12px;
+    gap:10px;
+  }
+  /* Brand text appears fully in header */
+  .brand{
+    width:auto;
+    font-size:14px;
+    gap:8px;
+    flex-shrink:0;
+  }
+  .brand span{
+    display:inline-block !important;
+    white-space:nowrap;
+  }
+  .search-wrapper{
+    flex:1;
+    min-width:75px;
+  }
+  .search{
+    height:35px;
+    font-size:11.5px;
+    padding:0 26px 0 28px;
+  }
+  .search-icon{
+    left:9px;
+    font-size:12px;
+  }
+  .top-actions .icon-btn{
+    display:none; /* Icons are present in bottom taskbar */
+  }
+  .theme-btn{
+    width:34px;
+    height:34px;
+  }
+  .create{
+    width:34px;
+    height:34px;
+    font-size:20px;
+  }
+  .avatar{
+    width:30px;
+    height:30px;
+  }
+  .post-image{
+    height:310px;
+  }
+  .explore-grid{
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+  }
+  .story-viewer-container{
+    width:100vw;
+    height:100vh;
+    border-radius:0;
+  }
+}
+
+/* Small Phones (<= 420px) */
+@media(max-width:420px){
+  .topbar{
+    padding:0 8px;
+    gap:6px;
+  }
+  .brand{
+    font-size:13px;
+    gap:6px;
+  }
+  .brand .logo{
+    width:24px;
+    height:24px;
+    font-size:12px;
+  }
+  .search{
+    padding:0 18px 0 24px;
+    font-size:11px;
+  }
+  .nav button{
+    min-width:54px;
+    padding:3px 1px;
+  }
+  .nav-label{
+    font-size:9.5px;
+  }
+  .post-image{
+    height:270px;
+  }
+  .profile-top{
+    flex-direction:column;
+    text-align:center;
+    gap:12px;
+  }
+  .profile-stats{
+    justify-content:center;
+    gap:18px;
+  }
+  .profile-actions{
+    justify-content:center;
+  }
+  .chat-container{
+    height:460px;
+  }
+}
+/* ==========================================================================
+   Gemini AI Wildlife & Pet Companion Styles
+   ========================================================================== */
+.gemini-top-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:linear-gradient(135deg, rgba(8,127,109,0.12), rgba(59,130,246,0.12));
+  border:1px solid color-mix(in srgb, var(--green) 40%, #3b82f6 40%);
+  color:var(--text);
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:11.5px;
+  font-weight:700;
+  cursor:pointer;
+  transition:var(--transition);
+}
+.gemini-top-btn:hover{
+  background:linear-gradient(135deg, rgba(8,127,109,0.25), rgba(59,130,246,0.25));
+  transform:translateY(-1px);
+  box-shadow:0 3px 12px rgba(8,127,109,0.2);
+}
+.gemini-sparkle{
+  color:var(--green);
+  font-size:13px;
+  animation:geminiGlow 2.5s infinite alternate ease-in-out;
+}
+@keyframes geminiGlow{
+  0%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 2px var(--green))}
+  100%{transform:scale(1.25) rotate(15deg);filter:drop-shadow(0 0 8px #3b82f6)}
+}
+
+.gemini-container{
+  display:flex;
+  flex-direction:column;
+  height:min(720px, calc(100vh - 120px));
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+  box-shadow:var(--shadow-lg);
+  position:relative;
+}
+.gemini-header{
+  padding:14px 18px;
+  background:linear-gradient(90deg, var(--card) 0%, var(--green-soft) 100%);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.gemini-header-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.gemini-avatar-badge{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  background:linear-gradient(135deg, var(--green), #3b82f6);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  box-shadow:0 3px 10px rgba(8,127,109,0.3);
+}
+.gemini-header-title strong{
+  font-size:13px;
+  color:var(--text-heading);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.gemini-header-title span{
+  font-size:10px;
+  color:var(--muted);
+}
+.gemini-status-tag{
+  font-size:9px;
+  padding:2px 7px;
+  border-radius:10px;
+  background:rgba(16,185,129,0.15);
+  color:#10b981;
+  font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.gemini-status-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#10b981;
+  animation:pulseDot 1.8s infinite ease-in-out;
+}
+@keyframes pulseDot{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.4;transform:scale(0.8)}
+}
+.gemini-header-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* Quick prompt chips */
+.gemini-prompts-bar{
+  padding:10px 16px;
+  background:var(--card-subtle);
+  border-bottom:1px solid var(--line-subtle);
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.gemini-prompts-bar::-webkit-scrollbar{display:none}
+.gemini-prompt-chip{
+  font-size:10px;
+  font-weight:600;
+  padding:5px 11px;
+  border-radius:14px;
+  background:var(--card);
+  border:1px solid var(--line);
+  color:var(--text);
+  white-space:nowrap;
+  cursor:pointer;
+  transition:var(--transition);
+}
+.gemini-prompt-chip:hover{
+  border-color:var(--green);
+  background:var(--green-soft);
+  color:var(--green);
+  transform:translateY(-1px);
+}
+
+/* Messages */
+.gemini-chat-scroll{
+  flex:1;
+  overflow-y:auto;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  background:var(--bg);
+}
+.gemini-message{
+  display:flex;
+  gap:12px;
+  max-width:85%;
+  animation:fadeSlide 0.3s ease;
+}
+.gemini-message.user{
+  align-self:flex-end;
+  flex-direction:row-reverse;
+}
+.gemini-message.assistant{
+  align-self:flex-start;
+}
+.gemini-msg-avatar{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
+  flex-shrink:0;
+  border:1px solid var(--line);
+}
+.gemini-ai-avatar{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:linear-gradient(135deg, var(--green), #3b82f6);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:14px;
+  flex-shrink:0;
+  box-shadow:0 2px 8px rgba(8,127,109,0.25);
+}
+.gemini-msg-body{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px 16px;
+  font-size:11.5px;
+  line-height:1.5;
+  color:var(--text);
+  position:relative;
+  box-shadow:var(--shadow-sm);
+}
+.gemini-message.user .gemini-msg-body{
+  background:var(--green);
+  color:#fff;
+  border-color:var(--green);
+  border-bottom-right-radius:4px;
+}
+.gemini-message.assistant .gemini-msg-body{
+  border-bottom-left-radius:4px;
+}
+.gemini-msg-body p{margin-bottom:8px}
+.gemini-msg-body p:last-child{margin-bottom:0}
+.gemini-msg-body ul, .gemini-msg-body ol{margin-left:18px;margin-bottom:8px}
+.gemini-msg-body li{margin-bottom:4px}
+.gemini-msg-time{
+  font-size:8.5px;
+  opacity:0.65;
+  margin-top:6px;
+  text-align:right;
+}
+
+.gemini-thinking{
+  display:none;
+  align-self:flex-start;
+  font-size:11px;
+  color:var(--muted);
+  font-style:italic;
+  padding:6px 14px;
+  background:var(--card);
+  border-radius:12px;
+  border:1px solid var(--line);
+  margin-left:44px;
+  animation:pulseDot 1.5s infinite;
+}
+
+/* Input Bar */
+.gemini-input-container{
+  padding:12px 16px;
+  background:var(--card);
+  border-top:1px solid var(--line);
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+}
+.gemini-input{
+  flex:1;
+  min-height:42px;
+  max-height:120px;
+  border:1px solid var(--line);
+  background:var(--card-subtle);
+  border-radius:12px;
+  padding:10px 14px;
+  font-size:12px;
+  color:var(--text);
+  outline:none;
+  resize:none;
+  line-height:1.4;
+  transition:var(--transition);
+}
+.gemini-input:focus{
+  border-color:var(--green);
+  background:var(--card);
+  box-shadow:0 0 0 3px var(--green-soft);
+}
+.gemini-send-btn{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  background:linear-gradient(135deg, var(--green), #3b82f6);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:16px;
+  transition:var(--transition);
+  flex-shrink:0;
+}
+.gemini-send-btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 3px 12px rgba(8,127,109,0.3);
+}
+
+/* ==========================================================================
+   NexusAuth Login Card & Integration Styles
+   ========================================================================== */
+.auth-top-btn{
+  border:1px solid color-mix(in srgb, var(--green) 40%, var(--line));
+  background:var(--card);
+  color:var(--green);
+  border-radius:8px;
+  padding:6px 12px;
+  font-size:11px;
+  font-weight:700;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  transition:var(--transition);
+}
+.auth-top-btn:hover{
+  background:var(--green);
+  color:#fff;
+  border-color:var(--green);
+}
+
+.nexus-auth-wrapper{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px 0;
+  min-height:calc(100vh - 180px);
+}
+.nexus-card{
+  background:var(--card);
+  border:1px solid color-mix(in srgb, var(--green) 30%, var(--line));
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  width:min(460px, 94vw);
+  padding:28px 24px;
+  position:relative;
+  overflow:hidden;
+  transition:var(--transition);
+}
+.nexus-badge{
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  background:linear-gradient(135deg, var(--green), #10b981);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  margin:0 auto 12px;
+  font-size:20px;
+  box-shadow:0 4px 16px rgba(8,127,109,0.3);
+}
+.nexus-card h2{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:22px;
+  text-align:center;
+  color:var(--text-heading);
+  margin-bottom:4px;
+}
+.nexus-card .subtitle{
+  text-align:center;
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:20px;
+}
+
+/* Tabs */
+.auth-tabs-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  background:var(--card-subtle);
+  padding:4px;
+  border-radius:10px;
+  margin-bottom:18px;
+  border:1px solid var(--line);
+}
+.auth-tab-btn{
+  padding:8px 0;
+  font-size:11.5px;
+  font-weight:700;
+  color:var(--muted);
+  border-radius:8px;
+  transition:var(--transition);
+  text-align:center;
+}
+.auth-tab-btn.active{
+  background:var(--card);
+  color:var(--green);
+  box-shadow:var(--shadow-sm);
+}
+
+/* Input Wrappers with Icons */
+.auth-input-group{margin-bottom:14px}
+.auth-input-label{
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  font-weight:600;
+  color:var(--muted);
+  margin-bottom:5px;
+}
+.auth-input-label a{
+  color:var(--green);
+  font-weight:700;
+}
+.auth-input-box{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.auth-input-icon{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  z-index:5;
+}
+.auth-input-icon svg{
+  width:16px;
+  height:16px;
+}
+.auth-input{
+  width:100%;
+  height:42px;
+  background:var(--card-subtle);
+  border:1px solid var(--line);
+  border-radius:9px;
+  padding:0 42px 0 38px;
+  font-size:12.5px;
+  color:var(--text);
+  outline:none;
+  transition:var(--transition);
+}
+.auth-input:focus{
+  border-color:var(--green);
+  background:var(--card);
+  box-shadow:0 0 0 3px var(--green-soft);
+}
+.auth-eye-btn{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:transparent;
+  border:none;
+  border-radius:6px;
+  padding:0;
+  z-index:20;
+  transition:all 0.2s ease;
+}
+.auth-eye-btn:hover{
+  color:var(--green);
+  background:var(--green-soft);
+}
+.auth-eye-btn svg{
+  width:16px;
+  height:16px;
+  pointer-events:none;
+}
+
+/* Password Strength Meter */
+.strength-meter{
+  margin-top:6px;
+  display:none;
+}
+.strength-bars{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:4px;
+  margin-bottom:4px;
+}
+.strength-bar{
+  height:4px;
+  border-radius:2px;
+  background:var(--line);
+  transition:background-color 0.3s ease;
+}
+.strength-bar.weak{background:#ef4444}
+.strength-bar.fair{background:#f59e0b}
+.strength-bar.good{background:#3b82f6}
+.strength-bar.strong{background:#10b981}
+.strength-text{
+  font-size:9.5px;
+  color:var(--muted);
+}
+.strength-text strong{color:var(--text-heading)}
+
+/* Social Grid */
+.auth-divider{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:18px 0 14px;
+  font-size:10.5px;
+  color:var(--muted);
+}
+.auth-divider::before, .auth-divider::after{
+  content:'';
+  flex:1;
+  height:1px;
+  background:var(--line);
+}
+.social-buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.social-login-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:9px 12px;
+  border:1px solid var(--line);
+  background:var(--card-subtle);
+  border-radius:8px;
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--text);
+  transition:var(--transition);
+}
+.social-login-btn:hover{
+  border-color:var(--green);
+  background:var(--card);
+  transform:translateY(-1px);
+}
+.social-login-btn svg{width:16px;height:16px}
+
+/* ==========================================================================
+   Full-Screen Authentication Gatekeeper Styles
+   ========================================================================== */
+.auth-gate-screen{
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  z-index:99999;
+  background:var(--bg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  overflow-y:auto;
+  padding:24px 16px 48px;
+  transition:opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease;
+}
+
+.ambient-background{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:0;
+}
+
+.ambient-background .orb{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(80px);
+  opacity:0.28;
+  animation:floatOrb 20s ease-in-out infinite alternate;
+}
+
+[data-theme="dark"] .ambient-background .orb{
+  opacity:0.38;
+}
+
+.ambient-background .orb-1{
+  width:420px;
+  height:420px;
+  background:var(--green);
+  top:-80px;
+  left:-80px;
+}
+
+.ambient-background .orb-2{
+  width:360px;
+  height:360px;
+  background:#10b981;
+  bottom:-60px;
+  right:-60px;
+  animation-duration:24s;
+}
+
+.ambient-background .orb-3{
+  width:280px;
+  height:280px;
+  background:#3b82f6;
+  top:45%;
+  left:60%;
+  animation-duration:28s;
+}
+
+.ambient-background .grid-overlay{
+  position:absolute;
+  inset:0;
+  background-image:radial-gradient(circle at 1px 1px, rgba(8,127,109,0.08) 1px, transparent 0);
+  background-size:32px 32px;
+}
+
+@keyframes floatOrb{
+  0%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(40px,30px) scale(1.08)}
+  100%{transform:translate(-30px,50px) scale(0.95)}
+}
+
+.gate-top-bar{
+  width:min(480px,100%);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
+  z-index:10;
+  position:relative;
+}
+
+.gate-brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:20px;
+  font-weight:700;
+  color:var(--text-heading);
+}
+
+.gate-theme-toggle-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 15px;
+  border-radius:20px;
+  background:var(--card);
+  border:1px solid var(--line);
+  color:var(--text);
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.25s ease;
+  box-shadow:var(--shadow-sm);
+  user-select:none;
+}
+.gate-theme-toggle-btn:hover{
+  border-color:var(--green);
+  background:var(--green-soft);
+  color:var(--green);
+  transform:translateY(-1px);
+}
+.gate-theme-toggle-btn svg{
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.gate-theme-toggle-btn:hover svg{
+  transform:rotate(15deg);
+}
+.gate-theme-toggle-btn .theme-sun{display:none}
+.gate-theme-toggle-btn .theme-moon{display:block}
+[data-theme="dark"] .gate-theme-toggle-btn .theme-sun{display:block}
+[data-theme="dark"] .gate-theme-toggle-btn .theme-moon{display:none}
+
+.gate-card-wrapper{
+  width:min(480px,100%);
+  z-index:2;
+  position:relative;
+  margin:0 auto;
+}
+
+.gate-card{
+  width:100% !important;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  background:var(--card);
+  border:1px solid color-mix(in srgb, var(--green) 25%, var(--line));
+  box-shadow:var(--shadow-lg);
+  border-radius:18px;
+  padding:30px 26px;
+}
+
+/* Mock Credentials Banner */
+.mock-credentials-banner{
+  background:rgba(8,127,109,0.06);
+  border:1px dashed color-mix(in srgb, var(--green) 40%, var(--line));
+  border-radius:12px;
+  padding:14px 16px;
+  margin-bottom:20px;
+  transition:all 0.2s ease;
+}
+[data-theme="dark"] .mock-credentials-banner{
+  background:rgba(20,184,158,0.08);
+  border-color:rgba(20,184,158,0.3);
+}
+.mock-banner-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.mock-pill{
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  color:var(--green);
+  background:var(--green-soft);
+  padding:3px 9px;
+  border-radius:20px;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.btn-copy-fill{
+  background:linear-gradient(135deg, var(--green), #10b981);
+  color:#fff;
+  border:none;
+  border-radius:20px;
+  padding:5px 13px;
+  font-size:11.5px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  box-shadow:0 2px 8px rgba(8,127,109,0.25);
+}
+.btn-copy-fill:hover{
+  transform:translateY(-1px) scale(1.02);
+  box-shadow:0 4px 12px rgba(8,127,109,0.35);
+}
+.btn-copy-fill:active{
+  transform:translateY(0);
+}
+.mock-creds-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+@media(max-width:440px){
+  .mock-creds-grid{grid-template-columns:1fr}
+}
+.mock-cred-item{
+  display:flex;
+  flex-direction:column;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:7px 11px;
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+.mock-cred-item:hover{
+  border-color:var(--green);
+  background:var(--green-soft);
+  transform:translateY(-1px);
+}
+.mock-label{
+  font-size:10px;
+  color:var(--muted);
+  font-weight:600;
+  margin-bottom:2px;
+}
+.mock-code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  font-size:12px;
+  font-weight:700;
+  color:var(--green);
+}
+.mock-hint{
+  display:block;
+  font-size:10.5px;
+  color:var(--muted);
+  margin-top:9px;
+  line-height:1.4;
+}
+
+#gateSubmitBtn{
+  width:100%;
+  padding:12px;
+  font-size:13px;
+  font-weight:700;
+  margin-top:10px;
+  border-radius:10px;
+  cursor:pointer;
+  background:linear-gradient(135deg, var(--green), #10b981);
+  color:#fff;
+  border:none;
+  box-shadow:0 4px 14px rgba(8,127,109,0.28);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:all 0.2s ease;
+}
+#gateSubmitBtn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 18px rgba(8,127,109,0.38);
+}
+#gateSubmitBtn:active{
+  transform:translateY(0);
+}
+
+.gate-error{
+  display:block;
+  font-size:11px;
+  color:var(--danger);
+  margin-top:4px;
+  font-weight:500;
+}
+
+.app-locked .topbar,
+.app-locked .layout{
+  display:none !important;
+}
+
+/* Supabase status badge */
+.supabase-badge-bar{
+  margin-top:16px;
+  padding-top:12px;
+  border-top:1px solid var(--line-subtle);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:10px;
+  color:var(--muted);
+}
+.supabase-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#10b981;
+}
+</style>
+</head>
+<body>
+<!-- Full-Screen Auth Gatekeeper: Always displays first when not logged in -->
+<div class="auth-gate-screen" id="authGateScreen">
+  <div class="ambient-background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <header class="gate-top-bar">
+    <div class="gate-brand">
+      <div class="logo">C</div>
+      <span>Critter Circle</span>
+    </div>
+
+    <button type="button" class="gate-theme-toggle-btn" id="gateThemeBtn" onclick="toggleTheme()" title="Switch dark/light mode" aria-label="Toggle theme">
+      <svg class="theme-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+      <svg class="theme-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+      <span id="gateThemeText">Dark Mode</span>
+    </button>
+  </header>
+
+  <div class="gate-card-wrapper">
+    <div class="nexus-card gate-card">
+      <div class="nexus-badge">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      </div>
+      <h2 id="gateTitle">Welcome to Critter Circle</h2>
+      <p class="subtitle" id="gateSubtitle">Sign in to access your creature feed, pet circles &amp; Gemini AI</p>
+
+      <!-- Mock Credentials Banner -->
+      <div class="mock-credentials-banner">
+        <div class="mock-banner-head">
+          <span class="mock-pill">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            Mock Credentials
+          </span>
+          <button type="button" class="btn-copy-fill" onclick="autoFillGateMockCredentials()" title="Automatically fill email and password">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            1-Click Auto-Fill
+          </button>
+        </div>
+        <div class="mock-creds-grid">
+          <div class="mock-cred-item" onclick="copyMockField('email')" title="Click to copy email">
+            <span class="mock-label">Mock Email (Click to copy)</span>
+            <span class="mock-code">alex@example.com</span>
+          </div>
+          <div class="mock-cred-item" onclick="copyMockField('password')" title="Click to copy password">
+            <span class="mock-label">Mock Password (Click to copy)</span>
+            <span class="mock-code">Nexus@2026!</span>
+          </div>
+        </div>
+        <span class="mock-hint">Protected Community: enter credentials or click <strong>1-Click Auto-Fill</strong> and hit <strong>Sign In</strong> to unlock the app.</span>
+      </div>
+
+      <!-- Auth Tabs: Sign In / Sign Up -->
+      <div class="auth-tabs-row" role="tablist">
+        <button type="button" class="auth-tab-btn active" id="gateTabLogin" onclick="switchGateTab('login')">Sign In</button>
+        <button type="button" class="auth-tab-btn" id="gateTabSignup" onclick="switchGateTab('signup')">Sign Up</button>
+      </div>
+
+      <form id="gateAuthForm" onsubmit="return handleGateAuthSubmit(event)">
+        <!-- Full Name (Sign Up only) -->
+        <div class="auth-input-group" id="gateGroupFullName" style="display:none">
+          <label class="auth-input-label" for="gateFullName">Full Name</label>
+          <div class="auth-input-box">
+            <span class="auth-input-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </span>
+            <input class="auth-input" id="gateFullName" placeholder="e.g. Alex Carter" autocomplete="name" />
+          </div>
+          <span class="gate-error" id="gateErrorFullName"></span>
+        </div>
+
+        <!-- Email Address -->
+        <div class="auth-input-group">
+          <label class="auth-input-label" for="gateEmail">Email Address</label>
+          <div class="auth-input-box">
+            <span class="auth-input-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </span>
+            <input class="auth-input" id="gateEmail" type="email" placeholder="alex@example.com" value="alex@example.com" autocomplete="email" required />
+          </div>
+          <span class="gate-error" id="gateErrorEmail"></span>
+        </div>
+
+        <!-- Password -->
+        <div class="auth-input-group">
+          <div class="auth-input-label">
+            <label for="gatePassword">Password</label>
+            <a href="#" onclick="openForgotPassword();return false;">Forgot?</a>
+          </div>
+          <div class="auth-input-box">
+            <span class="auth-input-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </span>
+            <input class="auth-input" id="gatePassword" type="password" placeholder="••••••••" value="Nexus@2026!" autocomplete="current-password" oninput="handleGatePasswordInput(this.value)" required />
+            <button type="button" class="auth-eye-btn" onclick="togglePasswordVis('gatePassword', this)" aria-label="Toggle password visibility">
+              <svg class="eye-open" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="7" r="3"></circle></svg>
+              <svg class="eye-closed" style="display:none" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
+          </div>
+          <span class="gate-error" id="gateErrorPassword"></span>
+
+          <!-- Password Strength Meter -->
+          <div class="strength-meter" id="gateStrengthMeter">
+            <div class="strength-bars">
+              <div class="strength-bar" id="gateStrBar1"></div>
+              <div class="strength-bar" id="gateStrBar2"></div>
+              <div class="strength-bar" id="gateStrBar3"></div>
+              <div class="strength-bar" id="gateStrBar4"></div>
+            </div>
+            <div class="strength-text">Password strength: <strong id="gateStrLabel">None</strong></div>
+          </div>
+        </div>
+
+        <!-- Confirm Password (Sign Up only) -->
+        <div class="auth-input-group" id="gateGroupConfirmPassword" style="display:none">
+          <label class="auth-input-label" for="gateConfirmPassword">Confirm Password</label>
+          <div class="auth-input-box">
+            <span class="auth-input-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </span>
+            <input class="auth-input" id="gateConfirmPassword" type="password" placeholder="••••••••" autocomplete="new-password" />
+            <button type="button" class="auth-eye-btn" onclick="togglePasswordVis('gateConfirmPassword', this)" aria-label="Toggle confirm password visibility">
+              <svg class="eye-open" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="7" r="3"></circle></svg>
+              <svg class="eye-closed" style="display:none" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
+          </div>
+          <span class="gate-error" id="gateErrorConfirmPassword"></span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="comment-btn" id="gateSubmitBtn">
+          <span id="gateSubmitBtnText">Sign In to Enter App</span>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+
+        <div class="auth-divider">or continue with</div>
+
+        <div class="social-buttons">
+          <button type="button" class="social-login-btn" onclick="handleSocialGateAuth('google')">
+            <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+            Google
+          </button>
+          <button type="button" class="social-login-btn" onclick="handleSocialGateAuth('github')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            GitHub
+          </button>
+        </div>
+
+        <div style="text-align:center;margin-top:16px;font-size:11.5px;color:var(--muted)">
+          <span id="gateSwitchText">Don't have an account?</span>
+          <a href="#" style="color:var(--green);font-weight:700;margin-left:4px" onclick="toggleGateMode();return false;" id="gateSwitchLink">Sign up</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="app app-locked">
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="brand" onclick="showPage('home')">
+      <div class="logo">C</div>
+      <span>Critter Circle</span>
+    </div>
+
+    <div class="search-wrapper">
+      <span class="search-icon">⌕</span>
+      <input class="search" id="searchInput" placeholder="Search creatures, captions, or #circles..." oninput="handleSearch(this.value)" />
+      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+    </div>
+
+    <div class="top-actions">
+      <!-- Dark / Light Mode Toggle Button -->
+      <button class="theme-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Switch dark/light mode" aria-label="Toggle theme">
+        <svg class="theme-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg class="theme-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+
+      <!-- Gemini AI Sparkle Button -->
+      <button class="gemini-top-btn" onclick="showPage('gemini')" title="Ask Gemini Wildlife & Pet AI">
+        <span class="gemini-sparkle">✦</span>
+        <span>Gemini AI</span>
+      </button>
+
+      <!-- NexusAuth Sign In / Account Button -->
+      <button class="auth-top-btn" id="topAuthBtn" onclick="handleAuthButtonClick()" title="Account &amp; Sign Out">
+        <span id="topAuthIcon">🔑</span>
+        <span id="topAuthLabel">Sign In</span>
+      </button>
+
+      <button class="create" onclick="openCreateModal()" title="Create new post">+</button>
+      <button class="icon-btn" onclick="showPage('notifications')" title="Notifications">
+        ♡
+        <span class="badge" id="topNotifBadge">3</span>
+      </button>
+      <button class="icon-btn" onclick="showPage('messages')" title="Messages">
+        ✉
+        <span class="badge" id="topMsgBadge">2</span>
+      </button>
+      <button class="avatar-btn" onclick="showPage('profile')" title="My Profile">
+        <img class="avatar" id="topbarAvatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80" alt="Profile Avatar">
+      </button>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="nav">
+        <button class="active" data-page="home" onclick="showPage('home')">
+          <span class="nav-icon">⌂</span><span class="nav-label">Home</span>
+        </button>
+        <button data-page="explore" onclick="showPage('explore')">
+          <span class="nav-icon">⌕</span><span class="nav-label">Explore</span>
+        </button>
+        <button data-page="following" onclick="showPage('following')">
+          <span class="nav-icon">♧</span><span class="nav-label">Following</span>
+        </button>
+        <button data-page="saved" onclick="showPage('saved')">
+          <span class="nav-icon">♡</span><span class="nav-label">Saved</span>
+        </button>
+        <button data-page="gemini" onclick="showPage('gemini')">
+          <span class="nav-icon" style="color:var(--green)">✦</span><span class="nav-label">Gemini AI</span>
+          <span class="nav-badge" style="background:linear-gradient(135deg,#087f6d,#3b82f6);color:#fff">AI</span>
+        </button>
+        <button data-page="notifications" onclick="showPage('notifications')">
+          <span class="nav-icon">🔔</span><span class="nav-label">Notifications</span>
+          <span class="nav-badge" id="sideNotifBadge">3</span>
+        </button>
+        <button data-page="messages" onclick="showPage('messages')">
+          <span class="nav-icon">✉</span><span class="nav-label">Messages</span>
+          <span class="nav-badge" id="sideMsgBadge">2</span>
+        </button>
+        <button data-page="profile" onclick="showPage('profile')">
+          <span class="nav-icon">◉</span><span class="nav-label">Profile</span>
+        </button>
+        <button data-page="settings" onclick="showPage('settings')">
+          <span class="nav-icon">⚙</span><span class="nav-label">Settings</span>
+        </button>
+        <button data-page="auth" onclick="showPage('auth')">
+          <span class="nav-icon">🔑</span><span class="nav-label">NexusAuth</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="theme-row-btn" onclick="handleAuthButtonClick()">
+          <span id="sideAuthIcon">👤</span>
+          <span id="sideAuthText">Sign In</span>
+        </button>
+        <button class="theme-row-btn" onclick="toggleTheme()">
+          <span id="sideThemeIcon">🌙</span>
+          <span id="sideThemeText">Dark Mode</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Dynamic Content -->
+    <main class="content" id="content">
+      <!-- Injected by JavaScript -->
+    </main>
+
+    <!-- Rightbar Panels -->
+    <aside class="rightbar" id="rightbar">
+      <div class="card panel">
+        <h3>Suggested circles</h3>
+        <div id="suggestedCirclesContainer">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h3>Trending now</h3>
+        <div class="trend" onclick="filterByTag('#BackyardBirding')">
+          <b>#BackyardBirding</b>
+          <span>1.8k active today</span>
+        </div>
+        <div class="trend" onclick="filterByTag('#SoftPawsClub')">
+          <b>#SoftPawsClub</b>
+          <span>967 shared moments</span>
+        </div>
+        <div class="trend" onclick="filterByTag('#WildWisdom')">
+          <b>#WildWisdom</b>
+          <span>624 fresh notes</span>
+        </div>
+        <div class="trend" onclick="filterByTag('#GoldenHourPaws')">
+          <b>#GoldenHourPaws</b>
+          <span>418 sunny walks</span>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h3>Community categories</h3>
+        <div class="chips" id="categoriesContainer">
+          <span class="chip active" onclick="filterByCategory('All')">All</span>
+          <span class="chip" onclick="filterByCategory('Dogs')">Dogs</span>
+          <span class="chip" onclick="filterByCategory('Cats')">Cats</span>
+          <span class="chip" onclick="filterByCategory('Wildlife')">Wildlife</span>
+          <span class="chip" onclick="filterByCategory('Birds')">Birds</span>
+          <span class="chip" onclick="filterByCategory('Rabbits')">Rabbits</span>
+        </div>
+      </div>
+
+      <div class="tip">
+        <small>TODAY IN THE COMMUNITY</small>
+        <b>Try acts of kindness</b>
+        Share one small way an animal made your day brighter. The gentlest stories are gathering beautifully today.
+        <button style="margin-top:8px;font-size:9.5px;color:var(--green);font-weight:700;display:block" onclick="openCreateModal('Kindness Note: ')">✦ Share a gentle story</button>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- Modal: Create Post -->
+<div class="modal-overlay" id="createPostModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Create New Post</h3>
+      <button class="modal-close" onclick="closeCreateModal()">✕</button>
+    </div>
+    <form onsubmit="handleCreatePost(event)">
+      <div class="form-group">
+        <label>Pick a Photo or Moment</label>
+        <div class="preset-images" id="presetImagesContainer"></div>
+      </div>
+      <div class="form-group">
+        <label>Or paste custom Image URL</label>
+        <input class="form-control" id="customImageUrl" placeholder="https://images.unsplash.com/..." oninput="updateCreatePreview()" />
+      </div>
+      <div class="form-group">
+        <label>Category &amp; Circle</label>
+        <select class="form-control" id="postCircle">
+          <option value="Dogs · Maple Bark">Dogs · Maple Bark</option>
+          <option value="Cats · Sunroom Studio">Cats · Sunroom Studio</option>
+          <option value="Wildlife · Fernwood Reserve">Wildlife · Fernwood Reserve</option>
+          <option value="Rabbits · Petal Patch Garden">Rabbits · Petal Patch Garden</option>
+          <option value="Birds · Canopy Corner">Birds · Canopy Corner</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <label style="margin:0">Caption</label>
+          <button type="button" class="kind-chip" style="background:linear-gradient(135deg,rgba(8,127,109,0.15),rgba(59,130,246,0.15));border:1px solid color-mix(in srgb,var(--green) 30%,#3b82f6);color:var(--text);font-weight:700" onclick="generateGeminiCaption()">✦ Auto-Write with Gemini AI</button>
+        </div>
+        <textarea class="form-control" id="postCaption" placeholder="Write something kind, playful, or observant about this moment..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Tags (space or comma separated)</label>
+        <input class="form-control" id="postTags" placeholder="#PawsJoy #WoodlandWalk #CritterLove" />
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+        <button type="button" class="edit-btn" onclick="closeCreateModal()">Cancel</button>
+        <button type="submit" class="comment-btn" style="padding:9px 20px;font-size:12px">Publish Post</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Profile -->
+<div class="modal-overlay" id="editProfileModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Edit Profile</h3>
+      <button class="modal-close" onclick="closeEditProfileModal()">✕</button>
+    </div>
+    <form onsubmit="handleSaveProfile(event)">
+      <div class="form-group">
+        <label>Display Name</label>
+        <input class="form-control" id="profileNameInput" required />
+      </div>
+      <div class="form-group">
+        <label>Handle</label>
+        <input class="form-control" id="profileHandleInput" required />
+      </div>
+      <div class="form-group">
+        <label>Bio</label>
+        <textarea class="form-control" id="profileBioInput"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Avatar URL</label>
+        <input class="form-control" id="profileAvatarInput" />
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+        <button type="button" class="edit-btn" onclick="closeEditProfileModal()">Cancel</button>
+        <button type="submit" class="comment-btn" style="padding:9px 20px;font-size:12px">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Story Viewer -->
+<div class="story-viewer-modal" id="storyViewerModal">
+  <div class="story-viewer-container">
+    <div class="story-viewer-progress-bar">
+      <div class="story-viewer-progress-fill" id="storyProgressFill"></div>
+    </div>
+    <div class="story-viewer-head">
+      <img id="storyViewerAvatar" src="" alt="Story user">
+      <div>
+        <strong id="storyViewerUser"></strong>
+        <span id="storyViewerTime"></span>
+      </div>
+      <button class="story-viewer-close" onclick="closeStoryViewer()">✕</button>
+    </div>
+    <button class="story-nav-btn story-nav-prev" onclick="navigateStory(-1)">‹</button>
+    <button class="story-nav-btn story-nav-next" onclick="navigateStory(1)">›</button>
+    <img class="story-viewer-img" id="storyViewerImage" src="" alt="Story">
+    <div class="story-viewer-caption" id="storyViewerCaption"></div>
+  </div>
+</div>
+
+<!-- Modal: NexusAuth Login & Register -->
+<div class="modal-overlay" id="authModal">
+  <div class="nexus-card" style="margin:auto">
+    <div style="display:flex;justify-content:flex-end">
+      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+    </div>
+    <div class="nexus-badge">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 17 12 22 22 17"></polyline>
+        <polyline points="2 12 12 17 22 12"></polyline>
+      </svg>
+    </div>
+    <h2 id="authModalTitle">Welcome Back</h2>
+    <p class="subtitle" id="authModalSubtitle">Sign in to your Critter Circle &amp; Supabase account</p>
+
+    <!-- Quick Mock Credentials Helper Banner -->
+    <div class="mock-credentials-banner" style="margin-bottom:14px;padding:10px 14px;border-radius:10px;background:rgba(8,127,109,0.08);border:1px dashed rgba(8,127,109,0.3)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:11px;font-weight:800;color:var(--green)">⚡ MOCK CREDENTIALS</span>
+        <a href="login.html" style="font-size:11px;color:var(--green);font-weight:700;text-decoration:none">↗ Dedicated Login Page</a>
+      </div>
+      <div style="display:flex;gap:12px;font-size:11px;color:var(--text);font-family:monospace;background:rgba(0,0,0,0.04);padding:6px 10px;border-radius:6px;flex-wrap:wrap">
+        <span><strong>Email:</strong> alex@example.com</span>
+        <span><strong>Pass:</strong> Nexus@2026!</span>
+      </div>
+    </div>
+
+    <div class="auth-tabs-row" role="tablist">
+      <button type="button" class="auth-tab-btn active" id="tabBtnLogin" onclick="switchAuthTab('login')">Sign In</button>
+      <button type="button" class="auth-tab-btn" id="tabBtnSignup" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <form id="nexusAuthForm" onsubmit="handleAuthSubmit(event)">
+      <!-- Name field for sign up -->
+      <div class="auth-input-group" id="groupFullName" style="display:none">
+        <label class="auth-input-label">Full Name</label>
+        <div class="auth-input-box">
+          <span class="auth-input-icon">👤</span>
+          <input class="auth-input" id="authFullName" placeholder="e.g. Alex Morgan" autocomplete="name" />
+        </div>
+      </div>
+
+      <!-- Email field -->
+      <div class="auth-input-group">
+        <label class="auth-input-label">Email Address</label>
+        <div class="auth-input-box">
+          <span class="auth-input-icon">✉</span>
+          <input class="auth-input" id="authEmail" type="email" placeholder="alex@crittercircle.com" value="alex@example.com" autocomplete="email" required />
+        </div>
+      </div>
+
+      <!-- Password field -->
+      <div class="auth-input-group">
+        <div class="auth-input-label">
+          <span>Password</span>
+          <a href="#" onclick="openForgotPassword();return false;">Forgot?</a>
+        </div>
+        <div class="auth-input-box">
+          <span class="auth-input-icon">🔒</span>
+          <input class="auth-input" id="authPassword" type="password" placeholder="••••••••" value="Nexus@2026!" autocomplete="current-password" oninput="handlePasswordInput(this.value)" required />
+          <button type="button" class="auth-eye-btn" onclick="togglePasswordVis('authPassword', this)">👁</button>
+        </div>
+
+        <!-- Password Strength Meter -->
+        <div class="strength-meter" id="authStrengthMeter">
+          <div class="strength-bars">
+            <div class="strength-bar" id="strBar1"></div>
+            <div class="strength-bar" id="strBar2"></div>
+            <div class="strength-bar" id="strBar3"></div>
+            <div class="strength-bar" id="strBar4"></div>
+          </div>
+          <div class="strength-text">Password strength: <strong id="strLabel">None</strong></div>
+        </div>
+      </div>
+
+      <!-- Confirm password field -->
+      <div class="auth-input-group" id="groupConfirmPassword" style="display:none">
+        <label class="auth-input-label">Confirm Password</label>
+        <div class="auth-input-box">
+          <span class="auth-input-icon">🔒</span>
+          <input class="auth-input" id="authConfirmPassword" type="password" placeholder="••••••••" autocomplete="new-password" />
+          <button type="button" class="auth-eye-btn" onclick="togglePasswordVis('authConfirmPassword', this)">👁</button>
+        </div>
+      </div>
+
+      <!-- Submit button -->
+      <button type="submit" class="comment-btn" style="width:100%;padding:11px;font-size:12px;margin-top:6px" id="authSubmitBtn">
+        <span id="authSubmitBtnText">Sign In to Circle</span>
+      </button>
+
+      <div class="auth-divider">or continue with</div>
+
+      <div class="social-buttons">
+        <button type="button" class="social-login-btn" onclick="handleSocialAuth('google')">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          Google
+        </button>
+        <button type="button" class="social-login-btn" onclick="handleSocialAuth('github')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          GitHub
+        </button>
+      </div>
+
+      <div class="supabase-badge-bar">
+        <span style="display:flex;align-items:center;gap:6px">
+          <span class="supabase-dot" id="supabaseIndicator"></span>
+          <span id="supabaseIndicatorText">Supabase Ready</span>
+        </span>
+        <span style="color:var(--green);cursor:pointer;font-weight:600" onclick="showToast('Supabase auth & database configured via config.js')">Config details</span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Gemini API Key -->
+<div class="modal-overlay" id="geminiKeyModal">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="color:var(--green);font-size:18px">✦</span>
+        <h3 style="margin:0">Google Gemini API Key</h3>
+      </div>
+      <button class="modal-close" onclick="closeGeminiKeyModal()">✕</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:12px">
+      Optionally connect your personal Google Gemini API key to enable live web AI queries. If omitted, Critter Circle uses built-in Animal Wisdom AI mode!
+    </p>
+    <div class="form-group">
+      <label>Gemini API Key</label>
+      <input class="form-control" type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." />
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+      <button type="button" class="edit-btn" onclick="removeGeminiKey()">Clear Key</button>
+      <button type="button" class="comment-btn" onclick="saveGeminiKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ==========================================================================
+   Initial Application State & Mock Database
+   ========================================================================== */
+const defaultGuestUser = {
+  name: "",
+  handle: "",
+  email: "",
+  avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
+  bio: "",
+  stats: { posts: 0, followers: "0", following: "0" }
+};
+
+let currentUser = { ...defaultGuestUser };
+let isLoggedIn = false;
+
+const presetPostImages = [
+  "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1000&q=85",
+  "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=1000&q=85",
+  "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?auto=format&fit=crop&w=1000&q=85",
+  "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=1000&q=85",
+  "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1000&q=85",
+  "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?auto=format&fit=crop&w=1000&q=85"
+];
+
+let selectedPresetImage = presetPostImages[0];
+
+const storiesData = [
+  {
+    id: 1,
+    user: "Ruby",
+    handle: "@ruby.retriever",
+    avatar: "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=1000&q=85",
+    time: "25m ago",
+    caption: "Golden hour sprint in the tall grass! 🌾",
+    viewed: false
+  },
+  {
+    id: 2,
+    user: "Nori",
+    handle: "@nori_whiskers",
+    avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=1000&q=85",
+    time: "1h ago",
+    caption: "Nap spot level: absolute master. 😴",
+    viewed: false
+  },
+  {
+    id: 3,
+    user: "Clover",
+    handle: "@clover.fawns",
+    avatar: "https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1500463959177-e0869688df97?auto=format&fit=crop&w=1000&q=85",
+    time: "2h ago",
+    caption: "Quiet morning dew with the woodland herd.",
+    viewed: false
+  },
+  {
+    id: 4,
+    user: "Pip",
+    handle: "@pip_hops",
+    avatar: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1518796745738-41048802f99a?auto=format&fit=crop&w=1000&q=85",
+    time: "3h ago",
+    caption: "Fresh parsley was delivered, day made! 🌿",
+    viewed: false
+  },
+  {
+    id: 5,
+    user: "Rowan",
+    handle: "@rowan_otters",
+    avatar: "https://images.unsplash.com/photo-1577023311546-cdc07a8454d9?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=1000&q=85",
+    time: "4h ago",
+    caption: "Floating along Fernwood stream without a care in the world.",
+    viewed: false
+  },
+  {
+    id: 6,
+    user: "Milo",
+    handle: "@milo_beaks",
+    avatar: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1555169062-013468b47731?auto=format&fit=crop&w=1000&q=85",
+    time: "5h ago",
+    caption: "High canopy views on a brisk morning.",
+    viewed: false
+  }
+];
+
+let posts = [
+  {
+    id: 1,
+    user: "@pawspandpencils",
+    circle: "Dogs",
+    meta: "Dogs · Maple Bark · 18m",
+    avatar: "https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1558788353-f76d92427f16?auto=format&fit=crop&w=1000&q=85",
+    likes: 248,
+    liked: false,
+    saved: false,
+    caption: "Every trail deserves a victory lap and at least one leaf bouquet collected along the pine path.",
+    tags: "#GoldenHourPaws #TrailTails #DogDays",
+    comments: [
+      { id: 101, user: "@ruby.retriever", text: "Nothing beats a crunchy leaf bouquet! 🍂", time: "12m", liked: false },
+      { id: 102, user: "@alex.carter", text: "The sweetest smile on four paws ✨", time: "5m", liked: true }
+    ]
+  },
+  {
+    id: 2,
+    user: "@whisker.weekly",
+    circle: "Cats",
+    meta: "Cats · Sunroom Studio · 42m",
+    avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=1000&q=85",
+    likes: 391,
+    liked: true,
+    saved: true,
+    caption: "Miso has claimed the warmest square of afternoon sunlight, and frankly the lease seems airtight.",
+    tags: "#SunbeamSociety #WhiskerWatch #CatLife",
+    comments: [
+      { id: 201, user: "@mossmaple", text: "Miso is absolute royalty 👑", time: "22m", liked: true }
+    ]
+  },
+  {
+    id: 3,
+    user: "@wildtrail.notes",
+    circle: "Wildlife",
+    meta: "Wildlife · Fernwood Reserve · 1h",
+    avatar: "https://images.unsplash.com/photo-1508817628294-5a453fa0b8fb?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1516939884455-1445c8652f83?auto=format&fit=crop&w=1000&q=85",
+    likes: 612,
+    liked: false,
+    saved: false,
+    caption: "A quiet observer at the edge of the path. No rush, no noise, just a watchful woodland pause.",
+    tags: "#WildTrail #FoxFrame #NatureNotes",
+    comments: [
+      { id: 301, user: "@cloverclub", text: "Breathtaking stillness. What a magical encounter.", time: "45m", liked: false }
+    ]
+  },
+  {
+    id: 4,
+    user: "@bunnyandbloom",
+    circle: "Rabbits",
+    meta: "Rabbits · Petal Patch Garden · 2h",
+    avatar: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=1000&q=85",
+    likes: 176,
+    liked: false,
+    saved: true,
+    caption: "Today's garden helper inspected every bloom, accepted no constructive feedback, and left with a clover snack.",
+    tags: "#BunnyBloom #GardenFriends #SoftEars",
+    comments: [
+      { id: 401, user: "@pip_hops", text: "Chief inspector reporting for duty! 🥕", time: "1h", liked: true }
+    ]
+  },
+  {
+    id: 5,
+    user: "@featherfolk",
+    circle: "Birds",
+    meta: "Birds · Canopy Corner · 3h",
+    avatar: "https://images.unsplash.com/photo-1555169062-013468b47731?auto=format&fit=crop&w=120&q=80",
+    image: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&w=1000&q=85",
+    likes: 508,
+    liked: false,
+    saved: false,
+    caption: "A pocket-sized burst of colour making the morning canopy feel like its own little open-air gallery.",
+    tags: "#FeatherFolk #CanopyCalls #BirdingJoy",
+    comments: [
+      { id: 501, user: "@wildtrail.notes", text: "Magnificent plumage! 🍃", time: "2h", liked: false }
+    ]
+  }
+];
+
+const suggestedCircles = [
+  { id: 1, name: "Moss & Maple", handle: "@mossmaple", avatar: "https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=120&q=80", followed: false },
+  { id: 2, name: "Ink & Purr", handle: "@inkandpurr", avatar: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=120&q=80", followed: true },
+  { id: 3, name: "Clover Club", handle: "@cloverclub", avatar: "https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=120&q=80", followed: false }
+];
+
+let notifications = [
+  {
+    id: 1,
+    type: "like",
+    user: "Nori (@whisker.weekly)",
+    avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=120&q=80",
+    text: "liked your photo in Sunroom Studio",
+    time: "4m ago",
+    unread: true,
+    thumb: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=100&q=80"
+  },
+  {
+    id: 2,
+    type: "comment",
+    user: "Ruby",
+    avatar: "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=120&q=80",
+    text: 'commented: "The little moments that feel comforting are everything ✨"',
+    time: "24m ago",
+    unread: true,
+    thumb: "https://images.unsplash.com/photo-1558788353-f76d92427f16?auto=format&fit=crop&w=100&q=80"
+  },
+  {
+    id: 3,
+    type: "follow",
+    user: "Moss & Maple (@mossmaple)",
+    avatar: "https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=120&q=80",
+    text: "joined your circle and followed your wildlife journal",
+    time: "1h ago",
+    unread: true,
+    thumb: null
+  },
+  {
+    id: 4,
+    type: "circle",
+    user: "Clover Club",
+    avatar: "https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=120&q=80",
+    text: "invited you to the #BackyardBirding seasonal challenge",
+    time: "3h ago",
+    unread: false,
+    thumb: null
+  }
+];
+
+let conversations = [
+  {
+    id: 1,
+    name: "Moss & Maple",
+    handle: "@mossmaple",
+    avatar: "https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=120&q=80",
+    online: true,
+    unread: true,
+    messages: [
+      { sender: "them", text: "Hey Alex! Loved your capture of the red fox earlier! 🦊", time: "10:14 AM" },
+      { sender: "me", text: "Thank you so much! It was so peaceful early in the fog.", time: "10:16 AM" },
+      { sender: "them", text: "Are you joining the Fernwood trail walk this weekend?", time: "10:20 AM" }
+    ]
+  },
+  {
+    id: 2,
+    name: "Ink & Purr",
+    handle: "@inkandpurr",
+    avatar: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=120&q=80",
+    online: false,
+    unread: true,
+    messages: [
+      { sender: "them", text: "Did you see Miso's latest sunbeam conquest? 😂", time: "Yesterday" }
+    ]
+  },
+  {
+    id: 3,
+    name: "Bunny & Bloom",
+    handle: "@bunnyandbloom",
+    avatar: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=120&q=80",
+    online: true,
+    unread: false,
+    messages: [
+      { sender: "them", text: "Sending you clover seeds for the pollinator patch!", time: "Sep 26" },
+      { sender: "me", text: "Yay! That is wonderful! 🌱", time: "Sep 26" }
+    ]
+  }
+];
+
+let activeChatId = 1;
+let currentSearchQuery = "";
+let currentCategoryFilter = "All";
+let currentPage = "home";
+
+/* ==========================================================================
+   Theme Management (Light / Dark Mode)
+   ========================================================================== */
+function initTheme(){
+  const savedTheme = localStorage.getItem("critter_theme") || 
+    (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  setTheme(savedTheme);
+}
+
+function setTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("critter_theme", theme);
+  
+  const sideIcon = document.getElementById("sideThemeIcon");
+  const sideText = document.getElementById("sideThemeText");
+  if(sideIcon && sideText){
+    sideIcon.textContent = theme === "dark" ? "☀️" : "🌙";
+    sideText.textContent = theme === "dark" ? "Light Mode" : "Dark Mode";
+  }
+
+  const gateThemeText = document.getElementById("gateThemeText");
+  if(gateThemeText){
+    gateThemeText.textContent = theme === "dark" ? "Light Mode" : "Dark Mode";
+  }
+}
+
+function toggleTheme(){
+  const current = document.documentElement.getAttribute("data-theme") || "light";
+  const next = current === "dark" ? "light" : "dark";
+  setTheme(next);
+  showToast(`Switched to ${next === "dark" ? "Dark" : "Light"} mode ✨`);
+}
+
+/* ==========================================================================
+   Toast Notification System
+   ========================================================================== */
+function showToast(message, icon="🌿"){
+  const container = document.getElementById("toastContainer");
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `
+    <span class="toast-icon">${icon}</span>
+    <span>${message}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+  `;
+  container.appendChild(toast);
+  setTimeout(()=>{
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px)";
+    toast.style.transition = "all 0.3s ease";
+    setTimeout(()=> toast.remove(), 300);
+  }, 3200);
+}
+
+/* ==========================================================================
+   Page Views: Home, Explore, Following, Saved, Notifs, Messages, Profile, Settings
+   ========================================================================== */
+function homePageHTML(){
+  const filteredPosts = posts.filter(p => {
+    const matchesCat = (currentCategoryFilter === "All" || p.circle === currentCategoryFilter);
+    const matchesSearch = !currentSearchQuery || 
+      p.caption.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+      p.tags.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+      p.user.toLowerCase().includes(currentSearchQuery.toLowerCase());
+    return matchesCat && matchesSearch;
+  });
+
+  return `
+    <!-- Stories Carousel -->
+    <div class="card stories-card">
+      <div class="stories-header">
+        <span>STORIES &amp; DAILY MOMENTS</span>
+        <span style="color:var(--green);cursor:pointer" onclick="showToast('Swipe or click to view friend stories')">View All</span>
+      </div>
+      <div class="stories">
+        <div class="story add-story" onclick="openStoryCreator()">
+          <div class="story-ring">+</div>
+          <span>Add story</span>
+        </div>
+        ${storiesData.map(s => `
+          <div class="story" onclick="openStoryViewer(${s.id})">
+            <div class="story-ring ${s.viewed ? 'viewed' : ''}">
+              <img src="${s.avatar}" alt="${s.user}">
+            </div>
+            <span>${s.user}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <!-- Morning Featured Card -->
+    <div class="card featured-card">
+      <span class="featured-badge">✦ MORNING WOODLAND DISCOVERY</span>
+      <h2>Woodland Pause: Forest Whisper</h2>
+      <div class="featured-img-wrap">
+        <img src="https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=1000&q=85" alt="Woodland Fox">
+      </div>
+      <p>A quiet red fox listening through the damp moss and ferns in Fernwood Reserve. Nature teaches us to slow down and listen.</p>
+      <div class="featured-footer">
+        <span style="color:var(--muted)">Curated by Fernwood Forest Circle</span>
+        <button class="btn-celebrate" onclick="celebratePost(this)">Celebrate Nature 💚</button>
+      </div>
+    </div>
+
+    <!-- Active filter alert if applicable -->
+    ${currentSearchQuery ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:8px 12px;background:var(--green-soft);border-radius:8px;font-size:11px">
+        <span>Showing results for "<strong>${currentSearchQuery}</strong>"</span>
+        <button onclick="clearSearch()" style="color:var(--green);font-weight:700">Clear</button>
+      </div>
+    ` : ''}
+
+    <!-- Posts Feed -->
+    <div id="postsList">
+      ${filteredPosts.length ? filteredPosts.map(postHTML).join("") : `
+        <div class="card" style="padding:40px 20px;text-align:center;color:var(--muted)">
+          <div style="font-size:36px;margin-bottom:10px">🐾</div>
+          <h3 style="color:var(--text);margin-bottom:6px">No creatures found</h3>
+          <p style="font-size:11.5px">Try adjusting your search or category filter.</p>
+          <button class="comment-btn" style="margin-top:14px" onclick="clearFilters()">Reset Filters</button>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function postHTML(p){
+  return `
+    <article class="card post" id="post-${p.id}">
+      <div class="post-head">
+        <img src="${p.avatar}" alt="${p.user}">
+        <div class="user-meta">
+          <strong>${p.user} <span style="font-size:9px;color:var(--green)">✔</span></strong>
+          <span>${p.meta}</span>
+        </div>
+        <div class="post-menu-wrap">
+          <button class="more" onclick="togglePostDropdown(${p.id})">•••</button>
+          <div class="post-dropdown" id="postDropdown-${p.id}">
+            <button onclick="copyPostLink(${p.id})">🔗 Copy link</button>
+            <button onclick="sharePost(${p.id})">✉ Share post</button>
+            <button class="danger" onclick="hidePost(${p.id})">✕ Hide post</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="post-media-container" ondblclick="triggerDoubleTapLike(${p.id})">
+        <img class="post-image" src="${p.image}" alt="Animal moment" loading="lazy">
+        <div class="floating-heart" id="floatingHeart-${p.id}">💚</div>
+      </div>
+
+      <div class="post-body">
+        <div class="actions">
+          <button class="action ${p.liked ? 'liked' : ''}" id="likeBtn-${p.id}" onclick="toggleLike(${p.id})" title="Like">
+            ${p.liked ? '💚' : '♡'}
+          </button>
+          <button class="action" onclick="focusCommentInput(${p.id})" title="Comment">
+            💬 ${p.comments.length}
+          </button>
+          <button class="action" onclick="sharePost(${p.id})" title="Share">
+            ⌁
+          </button>
+          <button class="action save ${p.saved ? 'saved' : ''}" id="saveBtn-${p.id}" onclick="toggleSave(${p.id})" title="Save to collection">
+            ${p.saved ? '🔖' : '♡'}
+          </button>
+        </div>
+
+        <div class="likes" id="likesCount-${p.id}">${p.likes} likes</div>
+
+        <div class="caption">
+          <b>${p.user}</b> ${p.caption}
+          <br>
+          <span class="tags" onclick="filterByTag('${p.tags.split(' ')[0]}')">${p.tags}</span>
+        </div>
+
+        <!-- Comments -->
+        <div class="comments-list" id="commentsList-${p.id}">
+          ${p.comments.map(c => `
+            <div class="comment" id="comment-${c.id}">
+              <div class="comment-text">
+                <span class="comment-user">${c.user}</span>
+                <span>${c.text}</span>
+              </div>
+              <button class="comment-like-btn ${c.liked ? 'liked' : ''}" onclick="toggleCommentLike(${p.id}, ${c.id})">
+                ${c.liked ? '💚' : '♡'}
+              </button>
+            </div>
+          `).join("")}
+        </div>
+
+        <!-- Kindness Fast Reactions -->
+        <div class="kind-chips">
+          <span class="kind-chip" onclick="quickComment(${p.id}, 'So precious! 🐾')">🐾 So precious!</span>
+          <span class="kind-chip" onclick="quickComment(${p.id}, 'Pure joy! 🌿')">🌿 Pure joy!</span>
+          <span class="kind-chip" onclick="quickComment(${p.id}, 'Breathtaking capture 📷')">📷 Beautiful capture</span>
+        </div>
+
+        <!-- Add Comment Input -->
+        <div class="comment-input-wrap">
+          <input class="comment-input" id="commentInput-${p.id}" placeholder="Add a kind comment..." onkeypress="if(event.key==='Enter') submitComment(${p.id})">
+          <button class="comment-btn" onclick="submitComment(${p.id})">Post</button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function explorePageHTML(){
+  const exploreImages = [
+    { src: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=600&q=80", likes: 840, tag: "#HuskyPaws" },
+    { src: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80", likes: 924, tag: "#SunnyPups" },
+    { src: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?auto=format&fit=crop&w=600&q=80", likes: 1102, tag: "#KittenCuddles" },
+    { src: "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=600&q=80", likes: 450, tag: "#FelineGrace" },
+    { src: "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=600&q=80", likes: 673, tag: "#ForestCreatures" },
+    { src: "https://images.unsplash.com/photo-1452857297128-d9c29adba80b?auto=format&fit=crop&w=600&q=80", likes: 789, tag: "#HedgehogLove" },
+    { src: "https://images.unsplash.com/photo-1516939884455-1445c8652f83?auto=format&fit=crop&w=600&q=80", likes: 1320, tag: "#WildTrail" },
+    { src: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=600&q=80", likes: 812, tag: "#BunnyBloom" },
+    { src: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&w=600&q=80", likes: 940, tag: "#CanopyCalls" }
+  ];
+
+  return `
+    <h1 class="page-title">
+      Explore &amp; Discover
+      <span style="font-size:12px;font-family:Inter;font-weight:600;color:var(--green)">✦ 9 Fresh Galleries</span>
+    </h1>
+
+    <div class="card" style="padding:14px;margin-bottom:14px">
+      <div class="chips">
+        <span class="chip active">Trending</span>
+        <span class="chip" onclick="filterByCategory('Dogs')">Dogs &amp; Puppies</span>
+        <span class="chip" onclick="filterByCategory('Cats')">Felines</span>
+        <span class="chip" onclick="filterByCategory('Wildlife')">Wild Reserves</span>
+        <span class="chip" onclick="filterByCategory('Birds')">Aviary</span>
+        <span class="chip" onclick="filterByCategory('Rabbits')">Bunnies</span>
+      </div>
+    </div>
+
+    <div class="explore-grid">
+      ${exploreImages.map((img, i) => `
+        <div class="explore-item" onclick="openExploreLightbox('${img.src}', '${img.tag}', ${img.likes})">
+          <img src="${img.src}" alt="${img.tag}">
+          <div class="explore-overlay">
+            <span>💚 ${img.likes}</span>
+            <span>${img.tag}</span>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function followingPageHTML(){
+  return `
+    <h1 class="page-title">Following Circles</h1>
+
+    <div class="following-header">
+      <div>
+        <strong style="display:block;font-size:13px">Circles You Follow</strong>
+        <span style="color:var(--muted);font-size:11px">Updates from your favorite animal homes</span>
+      </div>
+      <button class="edit-btn" onclick="showToast('All circles are synced and active')">Manage</button>
+    </div>
+
+    <div class="card" style="padding:14px;margin-bottom:16px">
+      <div class="followed-avatars">
+        ${suggestedCircles.concat({ name: "Whisker Weekly", handle: "@whisker.weekly", avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=120&q=80" }).map(c => `
+          <div class="followed-circle-item" onclick="showToast('Viewing feed for ${c.name}')">
+            <img src="${c.avatar}" alt="${c.name}">
+            <span>${c.name}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <div id="followingPosts">
+      ${posts.slice(0, 3).map(postHTML).join("")}
+    </div>
+  `;
+}
+
+function savedPageHTML(){
+  const savedPosts = posts.filter(p => p.saved);
+
+  return `
+    <h1 class="page-title">
+      Saved Moments
+      <span style="font-size:12px;font-family:Inter;font-weight:600;color:var(--green)">${savedPosts.length} Bookmarks</span>
+    </h1>
+
+    <div class="card" style="padding:12px;margin-bottom:14px">
+      <div class="chips">
+        <span class="chip active">All Saved (${savedPosts.length})</span>
+        <span class="chip">Gentle Favorites</span>
+        <span class="chip">Care Tips</span>
+        <span class="chip">Woodland Frames</span>
+      </div>
+    </div>
+
+    ${savedPosts.length > 0 ? `
+      <div>
+        ${savedPosts.map(postHTML).join("")}
+      </div>
+    ` : `
+      <div class="card" style="padding:48px 20px;text-align:center;color:var(--muted)">
+        <div style="font-size:40px;margin-bottom:10px">🔖</div>
+        <h3 style="color:var(--text);margin-bottom:6px">No saved moments yet</h3>
+        <p style="font-size:11.5px">Click the bookmark icon (♡) on any post to save your favorite creature stories.</p>
+        <button class="comment-btn" style="margin-top:14px" onclick="showPage('home')">Browse Feed</button>
+      </div>
+    `}
+  `;
+}
+
+function notificationsPageHTML(){
+  const unreadCount = notifications.filter(n => n.unread).length;
+
+  return `
+    <h1 class="page-title">
+      Notifications
+      ${unreadCount > 0 ? `<button class="edit-btn" onclick="markAllNotificationsRead()">Mark all as read</button>` : ''}
+    </h1>
+
+    <div class="card panel" style="padding:6px 0">
+      <div class="notif-tabs" style="padding:8px 14px 10px">
+        <button class="notif-tab active" onclick="filterNotifs('all', this)">All</button>
+        <button class="notif-tab" onclick="filterNotifs('unread', this)">Unread (${unreadCount})</button>
+        <button class="notif-tab" onclick="filterNotifs('likes', this)">Likes</button>
+        <button class="notif-tab" onclick="filterNotifs('comments', this)">Comments</button>
+      </div>
+
+      <div id="notifsList">
+        ${notifications.map(n => `
+          <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="readNotification(${n.id})">
+            <div style="position:relative">
+              <img src="${n.avatar}" alt="${n.user}">
+              <div class="notif-icon-bubble">
+                ${n.type === 'like' ? '💚' : n.type === 'comment' ? '💬' : n.type === 'follow' ? '♧' : '✦'}
+              </div>
+            </div>
+            <div class="notif-content">
+              <strong>${n.user}</strong> ${n.text}
+              <span>${n.time}</span>
+            </div>
+            ${n.thumb ? `<img class="notif-thumb" src="${n.thumb}">` : ''}
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function messagesPageHTML(){
+  const currentChat = conversations.find(c => c.id === activeChatId) || conversations[0];
+
+  return `
+    <h1 class="page-title">Kindness Messages</h1>
+
+    <div class="chat-container ${isMobileChatActive ? 'mobile-chat-view' : 'mobile-list-view'}">
+      <!-- Chat Sidebar -->
+      <div class="chat-sidebar">
+        <div class="chat-sidebar-header">Direct Messages</div>
+        <div class="chat-list">
+          ${conversations.map(c => `
+            <div class="chat-user ${c.id === activeChatId ? 'active' : ''}" onclick="selectConversation(${c.id})">
+              <div class="chat-user-avatar">
+                <img src="${c.avatar}" alt="${c.name}">
+                ${c.online ? `<span class="online-dot"></span>` : ''}
+              </div>
+              <div class="chat-user-info">
+                <strong>${c.name}</strong>
+                <span>${c.messages[c.messages.length - 1]?.text || 'No messages'}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- Main Chat Area -->
+      <div class="chat-main">
+        <div class="chat-header">
+          <button class="chat-back-btn" onclick="toggleMobileChat(false)">‹ Chats</button>
+          <img src="${currentChat.avatar}" alt="${currentChat.name}">
+          <div class="chat-header-info">
+            <strong>${currentChat.name}</strong>
+            <span>${currentChat.online ? '● Active now' : 'Offline'}</span>
+          </div>
+          <button class="more" style="margin-left:auto" onclick="showToast('Circle details for ' + '${currentChat.name}')">ⓘ</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          ${currentChat.messages.map(m => `
+            <div class="bubble ${m.sender === 'me' ? 'sent' : 'received'}">
+              ${m.text}
+              <div class="bubble-time">${m.time}</div>
+            </div>
+          `).join("")}
+          <div class="typing-indicator" id="chatTypingIndicator">
+            ${currentChat.name} is typing...
+          </div>
+        </div>
+
+        <div class="chat-input-bar">
+          <button style="font-size:16px;color:var(--green);padding:4px" onclick="insertEmoji('🐾')">🐾</button>
+          <button style="font-size:16px;color:var(--green);padding:4px" onclick="insertEmoji('🌿')">🌿</button>
+          <input class="chat-input" id="chatMessageInput" placeholder="Write a kind message..." onkeypress="if(event.key==='Enter') sendMessage()" />
+          <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function profilePageHTML(){
+  return `
+    <h1 class="page-title">Profile</h1>
+
+    <section class="card profile-card">
+      <div class="profile-top">
+        <div class="profile-avatar-wrap">
+          <img class="profile-avatar" id="profilePageAvatar" src="${currentUser.avatar}" alt="${currentUser.name}">
+          <div class="avatar-badge">🐾</div>
+        </div>
+        <div class="profile-info">
+          <h2 id="profilePageName">${currentUser.name}</h2>
+          <p id="profilePageBio">${currentUser.handle} · ${currentUser.bio}</p>
+          <div class="profile-stats">
+            <span><b>${currentUser.stats.posts}</b>Posts</span>
+            <span><b>${currentUser.stats.followers}</b>Followers</span>
+            <span><b>${currentUser.stats.following}</b>Following</span>
+          </div>
+          <div class="profile-actions">
+            <button class="edit-btn" onclick="openEditProfileModal()">Edit Profile</button>
+            <button class="edit-btn" onclick="shareProfile()">Share Profile</button>
+            <button class="edit-btn" onclick="handleSignOut()" style="color:var(--danger)">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile Tabs -->
+    <div class="profile-tabs">
+      <button class="profile-tab active" onclick="switchProfileTab('posts', this)">Posts</button>
+      <button class="profile-tab" onclick="switchProfileTab('liked', this)">Liked</button>
+      <button class="profile-tab" onclick="switchProfileTab('saved', this)">Saved</button>
+    </div>
+
+    <section class="card" style="padding:10px" id="profileGridContainer">
+      <div class="explore-grid">
+        ${posts.map(p => `
+          <div class="explore-item" onclick="showToast('Viewing photo by ' + '${p.user}')">
+            <img src="${p.image}" alt="Post">
+            <div class="explore-overlay">
+              <span>💚 ${p.likes}</span>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function geminiPageHTML(){
+  const hasKey = !!localStorage.getItem("gemini_api_key");
+
+  return `
+    <div class="page-title">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="gemini-sparkle">✦</span>
+        <span>Gemini Wildlife &amp; Pet AI</span>
+      </div>
+      <button class="edit-btn" onclick="openGeminiKeyModal()" style="font-size:10px">
+        ⚙ ${hasKey ? 'Gemini Key Active' : 'Set Gemini API Key'}
+      </button>
+    </div>
+
+    <div class="gemini-container">
+      <div class="gemini-header">
+        <div class="gemini-header-brand">
+          <div class="gemini-avatar-badge">✦</div>
+          <div class="gemini-header-title">
+            <strong>Critter Gemini Assistant <span style="font-size:10px;color:var(--green)">✔</span></strong>
+            <span>Expert wildlife, pet care, and nature storytelling</span>
+          </div>
+        </div>
+        <div class="gemini-header-actions">
+          <span class="gemini-status-tag">
+            <span class="gemini-status-dot"></span>
+            ${hasKey ? 'Gemini 1.5 Flash' : 'Animal Wisdom Engine'}
+          </span>
+          <button class="more" onclick="clearGeminiChat()" title="Clear conversation">🗑</button>
+        </div>
+      </div>
+
+      <div class="gemini-prompts-bar">
+        <span class="gemini-prompt-chip" onclick="askGeminiQuickPrompt('Why does my cat knead blankets and purr?')">🐾 Why cats knead &amp; purr</span>
+        <span class="gemini-prompt-chip" onclick="askGeminiQuickPrompt('What should I do if I find a fallen baby bird on a trail?')">🌿 Baby bird on a trail</span>
+        <span class="gemini-prompt-chip" onclick="askGeminiQuickPrompt('5 great mental enrichment games for dogs at home')">🐕 Dog enrichment games</span>
+        <span class="gemini-prompt-chip" onclick="askGeminiQuickPrompt('Tell me a gentle, soothing story about a fox in the morning dew')">🦊 Gentle woodland story</span>
+        <span class="gemini-prompt-chip" onclick="askGeminiQuickPrompt('Tips for photographing backyard birds without scaring them')">📷 Bird photography tips</span>
+      </div>
+
+      <div class="gemini-chat-scroll" id="geminiChatScroll">
+        ${geminiMessages.map(m => `
+          <div class="gemini-message ${m.sender}">
+            ${m.sender === 'user' ? `
+              <img class="gemini-msg-avatar" src="${currentUser.avatar}" alt="You">
+            ` : `
+              <div class="gemini-ai-avatar">✦</div>
+            `}
+            <div class="gemini-msg-body">
+              ${formatGeminiText(m.text)}
+              <div class="gemini-msg-time">${m.time}</div>
+            </div>
+          </div>
+        `).join("")}
+        <div class="gemini-thinking" id="geminiThinkingIndicator">
+          ✦ Gemini is thinking &amp; observing...
+        </div>
+      </div>
+
+      <div class="gemini-input-container">
+        <textarea class="gemini-input" id="geminiChatInput" placeholder="Ask Gemini about animal behavior, wildlife care, or post ideas..." rows="1" onkeypress="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendGeminiMessage();}"></textarea>
+        <button class="gemini-send-btn" onclick="sendGeminiMessage()" title="Send">➤</button>
+      </div>
+    </div>
+  `;
+}
+
+function authPageHTML(){
+  return `
+    <div class="nexus-auth-wrapper">
+      <div class="nexus-card">
+        <div class="nexus-badge">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <h2 id="authPageTitle">Welcome to Critter Circle</h2>
+        <p class="subtitle">NexusAuth Glassmorphic Authentication</p>
+
+        <!-- Quick Mock Credentials Helper Banner -->
+        <div class="mock-credentials-banner" style="margin-bottom:14px;padding:10px 14px;border-radius:10px;background:rgba(8,127,109,0.08);border:1px dashed rgba(8,127,109,0.3)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:11px;font-weight:800;color:var(--green)">⚡ MOCK CREDENTIALS</span>
+            <a href="login.html" style="font-size:11px;color:var(--green);font-weight:700;text-decoration:none">↗ Open Standalone Page</a>
+          </div>
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--text);font-family:monospace;background:rgba(0,0,0,0.04);padding:6px 10px;border-radius:6px;flex-wrap:wrap">
+            <span><strong>Email:</strong> alex@example.com</span>
+            <span><strong>Pass:</strong> Nexus@2026!</span>
+          </div>
+        </div>
+
+        <div class="auth-tabs-row" role="tablist">
+          <button type="button" class="auth-tab-btn active" id="pageTabLogin" onclick="switchPageAuthTab('login')">Sign In</button>
+          <button type="button" class="auth-tab-btn" id="pageTabSignup" onclick="switchPageAuthTab('signup')">Sign Up</button>
+        </div>
+
+        <form id="pageAuthForm" onsubmit="handleAuthSubmit(event, true)">
+          <!-- Full Name for signup -->
+          <div class="auth-input-group" id="pageGroupFullName" style="display:none">
+            <label class="auth-input-label">Full Name</label>
+            <div class="auth-input-box">
+              <span class="auth-input-icon">👤</span>
+              <input class="auth-input" id="pageAuthFullName" placeholder="e.g. Alex Morgan" autocomplete="name" />
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="auth-input-group">
+            <label class="auth-input-label">Email Address</label>
+            <div class="auth-input-box">
+              <span class="auth-input-icon">✉</span>
+              <input class="auth-input" id="pageAuthEmail" type="email" placeholder="alex@crittercircle.com" value="alex@example.com" autocomplete="email" required />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="auth-input-group">
+            <div class="auth-input-label">
+              <span>Password</span>
+              <a href="#" onclick="openForgotPassword();return false;">Forgot?</a>
+            </div>
+            <div class="auth-input-box">
+              <span class="auth-input-icon">🔒</span>
+              <input class="auth-input" id="pageAuthPassword" type="password" placeholder="••••••••" value="Nexus@2026!" autocomplete="current-password" oninput="handlePasswordInput(this.value, 'page')" required />
+              <button type="button" class="auth-eye-btn" onclick="togglePasswordVis('pageAuthPassword', this)">👁</button>
+            </div>
+
+            <!-- Strength Meter -->
+            <div class="strength-meter" id="pageAuthStrengthMeter">
+              <div class="strength-bars">
+                <div class="strength-bar" id="pageStrBar1"></div>
+                <div class="strength-bar" id="pageStrBar2"></div>
+                <div class="strength-bar" id="pageStrBar3"></div>
+                <div class="strength-bar" id="pageStrBar4"></div>
+              </div>
+              <div class="strength-text">Password strength: <strong id="pageStrLabel">None</strong></div>
+            </div>
+          </div>
+
+          <!-- Confirm Password for signup -->
+          <div class="auth-input-group" id="pageGroupConfirmPassword" style="display:none">
+            <label class="auth-input-label">Confirm Password</label>
+            <div class="auth-input-box">
+              <span class="auth-input-icon">🔒</span>
+              <input class="auth-input" id="pageAuthConfirmPassword" type="password" placeholder="••••••••" autocomplete="new-password" />
+              <button type="button" class="auth-eye-btn" onclick="togglePasswordVis('pageAuthConfirmPassword', this)">👁</button>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="comment-btn" style="width:100%;padding:11px;font-size:12px;margin-top:6px" id="pageAuthSubmitBtn">
+            <span id="pageAuthSubmitBtnText">Sign In to Circle</span>
+          </button>
+
+          <div class="auth-divider">or continue with</div>
+
+          <div class="social-buttons">
+            <button type="button" class="social-login-btn" onclick="handleSocialAuth('google')">
+              <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+              Google
+            </button>
+            <button type="button" class="social-login-btn" onclick="handleSocialAuth('github')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+              GitHub
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function settingsPageHTML(){
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+
+  return `
+    <h1 class="page-title">Settings &amp; Preferences</h1>
+
+    <div class="card settings-section">
+      <h3>Appearance &amp; Display</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <strong>Dark Mode</strong>
+          <span>Toggle between gentle forest light and restful night theme</span>
+        </div>
+        <div class="toggle-switch ${isDark ? 'on' : ''}" id="settingsDarkToggle" onclick="toggleThemeAndSync(this)">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <strong>Reduced Animations</strong>
+          <span>Simplify transitions and floating effects</span>
+        </div>
+        <div class="toggle-switch" onclick="this.classList.toggle('on');showToast('Animation preference saved')">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <h3>Account &amp; Session</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <strong>Authenticated As</strong>
+          <span>${currentUser.name} (${currentUser.handle})</span>
+        </div>
+        <button class="edit-btn" onclick="openAuthModal()">Switch / Login</button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <strong>Google Gemini API Key</strong>
+          <span>${localStorage.getItem('gemini_api_key') ? 'Key Configured (Live AI)' : 'Not Set (Wisdom Mode)'}</span>
+        </div>
+        <button class="edit-btn" onclick="openGeminiKeyModal()">Manage Key</button>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <h3>Notifications</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <strong>Heart &amp; Kindness Alerts</strong>
+          <span>Receive notifications when someone appreciates your posts</span>
+        </div>
+        <div class="toggle-switch on" onclick="this.classList.toggle('on')">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <strong>Circle Invites</strong>
+          <span>Allow wildlife &amp; pet clubs to invite you to challenges</span>
+        </div>
+        <div class="toggle-switch on" onclick="this.classList.toggle('on')">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card settings-section">
+      <h3>Community Kindness</h3>
+      <div class="setting-row">
+        <div class="setting-info">
+          <strong>Encourage Uplifting Comments</strong>
+          <span>Highlight comforting badges and kindly phrases</span>
+        </div>
+        <div class="toggle-switch on" onclick="this.classList.toggle('on')">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="edit-btn" onclick="resetFeedData()">Reset Feed Content</button>
+        <button class="edit-btn" onclick="handleSignOut()" style="color:var(--danger)">Sign Out Account</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ==========================================================================
+   Navigation and Page Switching
+   ========================================================================== */
+function showPage(page){
+  if(!isLoggedIn){
+    lockApp();
+    return;
+  }
+
+  currentPage = page;
+  document.querySelectorAll(".nav button").forEach(b => {
+    b.classList.toggle("active", b.dataset.page === page);
+  });
+
+  const content = document.getElementById("content");
+  const rightbar = document.getElementById("rightbar");
+
+  // Show rightbar on home, explore, following
+  if(rightbar) rightbar.style.display = (page === "home" || page === "explore" || page === "following") ? "block" : "none";
+
+  if(page === "home") content.innerHTML = homePageHTML();
+  else if(page === "explore") content.innerHTML = explorePageHTML();
+  else if(page === "following") content.innerHTML = followingPageHTML();
+  else if(page === "saved") content.innerHTML = savedPageHTML();
+  else if(page === "gemini") {
+    content.innerHTML = geminiPageHTML();
+    scrollGeminiChatToBottom();
+  }
+  else if(page === "auth") content.innerHTML = authPageHTML();
+  else if(page === "notifications") content.innerHTML = notificationsPageHTML();
+  else if(page === "messages") {
+    isMobileChatActive = false;
+    content.innerHTML = messagesPageHTML();
+    scrollChatToBottom();
+  }
+  else if(page === "profile") content.innerHTML = profilePageHTML();
+  else if(page === "settings") content.innerHTML = settingsPageHTML();
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ==========================================================================
+   Interactivity: Likes, Double-Tap, Saves, Comments, Shares
+   ========================================================================== */
+function toggleLike(id){
+  const post = posts.find(p => p.id === id);
+  if(!post) return;
+  post.liked = !post.liked;
+  post.likes += post.liked ? 1 : -1;
+
+  const btn = document.getElementById(`likeBtn-${id}`);
+  const likesCount = document.getElementById(`likesCount-${id}`);
+  if(btn){
+    btn.innerHTML = post.liked ? '💚' : '♡';
+    btn.classList.toggle("liked", post.liked);
+  }
+  if(likesCount){
+    likesCount.textContent = `${post.likes} likes`;
+  }
+  showToast(post.liked ? "Liked with kindness 💚" : "Unliked");
+}
+
+function triggerDoubleTapLike(id){
+  const post = posts.find(p => p.id === id);
+  if(!post) return;
+
+  const heart = document.getElementById(`floatingHeart-${id}`);
+  if(heart){
+    heart.classList.remove("pop");
+    void heart.offsetWidth; // re-trigger animation
+    heart.classList.add("pop");
+  }
+
+  if(!post.liked){
+    toggleLike(id);
+  }
+}
+
+function toggleSave(id){
+  const post = posts.find(p => p.id === id);
+  if(!post) return;
+  post.saved = !post.saved;
+
+  const btn = document.getElementById(`saveBtn-${id}`);
+  if(btn){
+    btn.innerHTML = post.saved ? '🔖' : '♡';
+    btn.classList.toggle("saved", post.saved);
+  }
+  showToast(post.saved ? "Saved to your bookmarks 🔖" : "Removed from saved");
+
+  if(currentPage === "saved"){
+    document.getElementById("content").innerHTML = savedPageHTML();
+  }
+}
+
+function submitComment(postId){
+  const input = document.getElementById(`commentInput-${postId}`);
+  const text = input ? input.value.trim() : "";
+  if(!text) return;
+
+  const post = posts.find(p => p.id === postId);
+  if(!post) return;
+
+  const newComment = {
+    id: Date.now(),
+    user: currentUser.handle,
+    text: text,
+    time: "Just now",
+    liked: false
+  };
+
+  post.comments.push(newComment);
+  input.value = "";
+
+  const list = document.getElementById(`commentsList-${postId}`);
+  if(list){
+    const commentEl = document.createElement("div");
+    commentEl.className = "comment";
+    commentEl.id = `comment-${newComment.id}`;
+    commentEl.innerHTML = `
+      <div class="comment-text">
+        <span class="comment-user">${newComment.user}</span>
+        <span>${newComment.text}</span>
+      </div>
+      <button class="comment-like-btn" onclick="toggleCommentLike(${postId}, ${newComment.id})">♡</button>
+    `;
+    list.appendChild(commentEl);
+  }
+
+  showToast("Kind comment posted! ✨");
+}
+
+function quickComment(postId, text){
+  const input = document.getElementById(`commentInput-${postId}`);
+  if(input){
+    input.value = text;
+    submitComment(postId);
+  }
+}
+
+function toggleCommentLike(postId, commentId){
+  const post = posts.find(p => p.id === postId);
+  if(!post) return;
+  const comment = post.comments.find(c => c.id === commentId);
+  if(!comment) return;
+  comment.liked = !comment.liked;
+
+  const commentEl = document.getElementById(`comment-${commentId}`);
+  if(commentEl){
+    const btn = commentEl.querySelector(".comment-like-btn");
+    if(btn){
+      btn.innerHTML = comment.liked ? '💚' : '♡';
+      btn.classList.toggle("liked", comment.liked);
+    }
+  }
+}
+
+function focusCommentInput(postId){
+  const input = document.getElementById(`commentInput-${postId}`);
+  if(input){
+    input.focus();
+    input.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+function togglePostDropdown(postId){
+  const dropdown = document.getElementById(`postDropdown-${postId}`);
+  if(dropdown){
+    const isOpen = dropdown.classList.contains("show");
+    document.querySelectorAll(".post-dropdown").forEach(d => d.classList.remove("show"));
+    if(!isOpen) dropdown.classList.add("show");
+  }
+}
+
+window.addEventListener("click", (e) => {
+  if(!e.target.closest(".post-menu-wrap")){
+    document.querySelectorAll(".post-dropdown").forEach(d => d.classList.remove("show"));
+  }
+});
+
+function copyPostLink(id){
+  navigator.clipboard?.writeText(window.location.href);
+  showToast("Link copied to clipboard 🔗");
+  document.querySelectorAll(".post-dropdown").forEach(d => d.classList.remove("show"));
+}
+
+function sharePost(id){
+  showToast("Share options opened! Sending kindness... ⌁");
+}
+
+function hidePost(id){
+  const el = document.getElementById(`post-${id}`);
+  if(el){
+    el.style.opacity = "0";
+    el.style.transform = "scale(0.95)";
+    setTimeout(() => {
+      posts = posts.filter(p => p.id !== id);
+      el.remove();
+      showToast("Post hidden from feed");
+    }, 250);
+  }
+}
+
+function celebratePost(btn){
+  btn.textContent = "Celebrated! 🌿✨";
+  btn.style.background = "var(--green-hover)";
+  showToast("You shared a burst of celebration with the community! 🎉");
+}
+
+/* ==========================================================================
+   Search & Filter Operations
+   ========================================================================== */
+function handleSearch(val){
+  currentSearchQuery = val.trim();
+  const clearBtn = document.getElementById("searchClear");
+  if(clearBtn){
+    clearBtn.style.display = currentSearchQuery ? "flex" : "none";
+  }
+
+  if(currentPage !== "home"){
+    showPage("home");
+  } else {
+    document.getElementById("content").innerHTML = homePageHTML();
+  }
+}
+
+function clearSearch(){
+  const input = document.getElementById("searchInput");
+  if(input) input.value = "";
+  handleSearch("");
+}
+
+function filterByCategory(category){
+  currentCategoryFilter = category;
+  document.querySelectorAll("#categoriesContainer .chip").forEach(c => {
+    c.classList.toggle("active", c.textContent.trim() === category);
+  });
+  if(currentPage !== "home") showPage("home");
+  else document.getElementById("content").innerHTML = homePageHTML();
+}
+
+function filterByTag(tag){
+  const input = document.getElementById("searchInput");
+  if(input) input.value = tag;
+  handleSearch(tag);
+}
+
+function clearFilters(){
+  currentCategoryFilter = "All";
+  currentSearchQuery = "";
+  const input = document.getElementById("searchInput");
+  if(input) input.value = "";
+  document.querySelectorAll("#categoriesContainer .chip").forEach(c => {
+    c.classList.toggle("active", c.textContent.trim() === "All");
+  });
+  showPage("home");
+}
+
+/* ==========================================================================
+   Story Viewer & Creator Modal
+   ========================================================================== */
+let activeStoryIdx = 0;
+let storyTimer = null;
+
+function openStoryViewer(id){
+  if(!isLoggedIn){ lockApp(); return; }
+  const idx = storiesData.findIndex(s => s.id === id);
+  if(idx === -1) return;
+  activeStoryIdx = idx;
+  renderActiveStory();
+  document.getElementById("storyViewerModal").classList.add("open");
+}
+
+function closeStoryViewer(){
+  document.getElementById("storyViewerModal").classList.remove("open");
+  clearInterval(storyTimer);
+}
+
+function renderActiveStory(){
+  clearInterval(storyTimer);
+  const story = storiesData[activeStoryIdx];
+  story.viewed = true;
+
+  document.getElementById("storyViewerAvatar").src = story.avatar;
+  document.getElementById("storyViewerUser").textContent = story.user;
+  document.getElementById("storyViewerTime").textContent = story.time;
+  document.getElementById("storyViewerImage").src = story.image;
+  document.getElementById("storyViewerCaption").textContent = story.caption;
+
+  const fill = document.getElementById("storyProgressFill");
+  fill.style.width = "0%";
+
+  let progress = 0;
+  storyTimer = setInterval(() => {
+    progress += 2;
+    fill.style.width = `${progress}%`;
+    if(progress >= 100){
+      navigateStory(1);
+    }
+  }, 100);
+}
+
+function navigateStory(direction){
+  activeStoryIdx += direction;
+  if(activeStoryIdx >= storiesData.length){
+    closeStoryViewer();
+    showToast("Caught up on all stories! 🐾");
+    return;
+  }
+  if(activeStoryIdx < 0){
+    activeStoryIdx = 0;
+  }
+  renderActiveStory();
+}
+
+function openStoryCreator(){
+  const title = prompt("Share a moment for your story (e.g. 'Morning woodland walk!'):");
+  if(!title) return;
+
+  const newStory = {
+    id: Date.now(),
+    user: "Alex",
+    handle: currentUser.handle,
+    avatar: currentUser.avatar,
+    image: presetPostImages[Math.floor(Math.random() * presetPostImages.length)],
+    time: "Just now",
+    caption: title,
+    viewed: false
+  };
+
+  storiesData.unshift(newStory);
+  if(currentPage === "home"){
+    document.getElementById("content").innerHTML = homePageHTML();
+  }
+  showToast("Story shared with your circle! 🌿");
+}
+
+/* ==========================================================================
+   Create Post Modal
+   ========================================================================== */
+function openCreateModal(initialCaption=""){
+  if(!isLoggedIn){ lockApp(); return; }
+  const modal = document.getElementById("createPostModal");
+  modal.classList.add("open");
+
+  const captionInput = document.getElementById("postCaption");
+  if(captionInput && initialCaption){
+    captionInput.value = initialCaption;
+  }
+
+  // Populate preset images
+  const container = document.getElementById("presetImagesContainer");
+  if(container){
+    container.innerHTML = presetPostImages.map((img, i) => `
+      <img class="preset-thumb ${img === selectedPresetImage ? 'selected' : ''}" src="${img}" onclick="selectPresetImage('${img}', this)">
+    `).join("");
+  }
+}
+
+function closeCreateModal(){
+  document.getElementById("createPostModal").classList.remove("open");
+}
+
+function selectPresetImage(url, el){
+  selectedPresetImage = url;
+  document.querySelectorAll(".preset-thumb").forEach(t => t.classList.remove("selected"));
+  el.classList.add("selected");
+  const custom = document.getElementById("customImageUrl");
+  if(custom) custom.value = "";
+}
+
+function updateCreatePreview(){
+  const custom = document.getElementById("customImageUrl").value.trim();
+  if(custom){
+    selectedPresetImage = custom;
+    document.querySelectorAll(".preset-thumb").forEach(t => t.classList.remove("selected"));
+  }
+}
+
+function handleCreatePost(e){
+  e.preventDefault();
+  const caption = document.getElementById("postCaption").value.trim();
+  const circle = document.getElementById("postCircle").value;
+  const tags = document.getElementById("postTags").value.trim() || "#CritterCircle #NatureLove";
+  const customImg = document.getElementById("customImageUrl").value.trim();
+  const finalImage = customImg || selectedPresetImage;
+
+  const categoryName = circle.split(" · ")[0] || "Wildlife";
+
+  const newPost = {
+    id: Date.now(),
+    user: currentUser.handle,
+    circle: categoryName,
+    meta: `${circle} · Just now`,
+    avatar: currentUser.avatar,
+    image: finalImage,
+    likes: 1,
+    liked: true,
+    saved: false,
+    caption: caption,
+    tags: tags,
+    comments: []
+  };
+
+  posts.unshift(newPost);
+  closeCreateModal();
+  showToast("Your kind post is now live! ✨", "🎉");
+  showPage("home");
+}
+
+/* ==========================================================================
+   Profile Editing & Management
+   ========================================================================== */
+function openEditProfileModal(){
+  if(!isLoggedIn){ lockApp(); return; }
+  document.getElementById("profileNameInput").value = currentUser.name;
+  document.getElementById("profileHandleInput").value = currentUser.handle;
+  document.getElementById("profileBioInput").value = currentUser.bio;
+  document.getElementById("profileAvatarInput").value = currentUser.avatar;
+  document.getElementById("editProfileModal").classList.add("open");
+}
+
+function closeEditProfileModal(){
+  document.getElementById("editProfileModal").classList.remove("open");
+}
+
+function handleSaveProfile(e){
+  e.preventDefault();
+  currentUser.name = document.getElementById("profileNameInput").value.trim();
+  currentUser.handle = document.getElementById("profileHandleInput").value.trim();
+  currentUser.bio = document.getElementById("profileBioInput").value.trim();
+  const newAvatar = document.getElementById("profileAvatarInput").value.trim();
+  if(newAvatar) currentUser.avatar = newAvatar;
+
+  document.getElementById("topbarAvatar").src = currentUser.avatar;
+  closeEditProfileModal();
+  showToast("Profile details updated successfully! 🌿");
+  showPage("profile");
+}
+
+function shareProfile(){
+  navigator.clipboard?.writeText(window.location.href);
+  showToast("Profile link copied to clipboard! 🔗");
+}
+
+function switchProfileTab(tab, btn){
+  document.querySelectorAll(".profile-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+
+  const container = document.getElementById("profileGridContainer");
+  let list = posts;
+  if(tab === "liked") list = posts.filter(p => p.liked);
+  if(tab === "saved") list = posts.filter(p => p.saved);
+
+  container.innerHTML = `
+    <div class="explore-grid">
+      ${list.length ? list.map(p => `
+        <div class="explore-item" onclick="showToast('Viewing photo by ' + '${p.user}')">
+          <img src="${p.image}" alt="Post">
+          <div class="explore-overlay">
+            <span>💚 ${p.likes}</span>
+          </div>
+        </div>
+      `).join("") : `
+        <div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--muted)">
+          No ${tab} posts to display.
+        </div>
+      `}
+    </div>
+  `;
+}
+
+/* ==========================================================================
+   Rightbar Follows & Circle Recommendations
+   ========================================================================== */
+function renderSuggestedCircles(){
+  const container = document.getElementById("suggestedCirclesContainer");
+  if(!container) return;
+  container.innerHTML = suggestedCircles.map(c => `
+    <div class="suggest">
+      <img src="${c.avatar}" alt="${c.name}">
+      <div class="suggest-info">
+        <strong>${c.name}</strong>
+        <span>${c.handle}</span>
+      </div>
+      <button class="follow ${c.followed ? 'following' : ''}" onclick="toggleFollowCircle(${c.id})">
+        ${c.followed ? 'Following' : 'Follow'}
+      </button>
+    </div>
+  `).join("");
+}
+
+function toggleFollowCircle(id){
+  const circle = suggestedCircles.find(c => c.id === id);
+  if(!circle) return;
+  circle.followed = !circle.followed;
+  renderSuggestedCircles();
+  showToast(circle.followed ? `Now following ${circle.name} ♧` : `Unfollowed ${circle.name}`);
+}
+
+/* ==========================================================================
+   Notifications Actions
+   ========================================================================== */
+function readNotification(id){
+  const notif = notifications.find(n => n.id === id);
+  if(notif){
+    notif.unread = false;
+    updateBadgeCounts();
+    if(currentPage === "notifications"){
+      document.getElementById("content").innerHTML = notificationsPageHTML();
+    }
+  }
+}
+
+function markAllNotificationsRead(){
+  notifications.forEach(n => n.unread = false);
+  updateBadgeCounts();
+  document.getElementById("content").innerHTML = notificationsPageHTML();
+  showToast("All notifications marked as read ✔");
+}
+
+function filterNotifs(type, btn){
+  if(btn){
+    document.querySelectorAll(".notif-tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+  }
+  const list = document.getElementById("notifsList");
+  let filtered = notifications;
+  if(type === "unread") filtered = notifications.filter(n => n.unread);
+  if(type === "likes") filtered = notifications.filter(n => n.type === "like");
+  if(type === "comments") filtered = notifications.filter(n => n.type === "comment");
+
+  list.innerHTML = filtered.map(n => `
+    <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="readNotification(${n.id})">
+      <div style="position:relative">
+        <img src="${n.avatar}" alt="${n.user}">
+        <div class="notif-icon-bubble">
+          ${n.type === 'like' ? '💚' : n.type === 'comment' ? '💬' : n.type === 'follow' ? '♧' : '✦'}
+        </div>
+      </div>
+      <div class="notif-content">
+        <strong>${n.user}</strong> ${n.text}
+        <span>${n.time}</span>
+      </div>
+      ${n.thumb ? `<img class="notif-thumb" src="${n.thumb}">` : ''}
+    </div>
+  `).join("");
+}
+
+function updateBadgeCounts(){
+  const unreadNotifs = notifications.filter(n => n.unread).length;
+  const topBadge = document.getElementById("topNotifBadge");
+  const sideBadge = document.getElementById("sideNotifBadge");
+  if(topBadge){
+    topBadge.textContent = unreadNotifs;
+    topBadge.style.display = unreadNotifs > 0 ? "flex" : "none";
+  }
+  if(sideBadge){
+    sideBadge.textContent = unreadNotifs;
+    sideBadge.style.display = unreadNotifs > 0 ? "inline-block" : "none";
+  }
+}
+
+/* ==========================================================================
+   Chat / Messenger Operations
+   ========================================================================== */
+let isMobileChatActive = false;
+
+function selectConversation(id){
+  activeChatId = id;
+  const chat = conversations.find(c => c.id === id);
+  if(chat) chat.unread = false;
+  isMobileChatActive = true;
+  document.getElementById("content").innerHTML = messagesPageHTML();
+  scrollChatToBottom();
+}
+
+function toggleMobileChat(showChat){
+  isMobileChatActive = showChat;
+  document.getElementById("content").innerHTML = messagesPageHTML();
+  if(showChat) scrollChatToBottom();
+}
+
+function sendMessage(){
+  const input = document.getElementById("chatMessageInput");
+  const text = input ? input.value.trim() : "";
+  if(!text) return;
+
+  const currentChat = conversations.find(c => c.id === activeChatId);
+  if(!currentChat) return;
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  currentChat.messages.push({
+    sender: "me",
+    text: text,
+    time: timeStr
+  });
+
+  input.value = "";
+  renderChatMessagesOnly();
+
+  // Simulate kind reply from creator
+  const indicator = document.getElementById("chatTypingIndicator");
+  if(indicator) indicator.style.display = "block";
+  scrollChatToBottom();
+
+  setTimeout(() => {
+    if(indicator) indicator.style.display = "none";
+    const replies = [
+      "That is so wonderful to hear! 🐾 Sending warmth to your critter companions.",
+      "Aww, thank you for sharing! The kindness in this circle makes my whole day brighter 🌿",
+      "Absolutely! Let's arrange a community photo walk soon! 📷",
+      "Such sweet gentle words. Truly grateful for your support! 💚"
+    ];
+    const replyText = replies[Math.floor(Math.random() * replies.length)];
+    currentChat.messages.push({
+      sender: "them",
+      text: replyText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+    renderChatMessagesOnly();
+  }, 1400);
+}
+
+function renderChatMessagesOnly(){
+  const currentChat = conversations.find(c => c.id === activeChatId);
+  const container = document.getElementById("chatMessages");
+  if(!container || !currentChat) return;
+
+  container.innerHTML = `
+    ${currentChat.messages.map(m => `
+      <div class="bubble ${m.sender === 'me' ? 'sent' : 'received'}">
+        ${m.text}
+        <div class="bubble-time">${m.time}</div>
+      </div>
+    `).join("")}
+    <div class="typing-indicator" id="chatTypingIndicator">
+      ${currentChat.name} is typing...
+    </div>
+  `;
+  scrollChatToBottom();
+}
+
+function insertEmoji(emoji){
+  const input = document.getElementById("chatMessageInput");
+  if(input){
+    input.value += " " + emoji;
+    input.focus();
+  }
+}
+
+function scrollChatToBottom(){
+  setTimeout(() => {
+    const el = document.getElementById("chatMessages");
+    if(el) el.scrollTop = el.scrollHeight;
+  }, 50);
+}
+
+/* ==========================================================================
+   Settings Page Actions
+   ========================================================================== */
+function toggleThemeAndSync(switchEl){
+  toggleTheme();
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  switchEl.classList.toggle("on", isDark);
+}
+
+function resetFeedData(){
+  localStorage.removeItem("critter_theme");
+  showToast("Feed content refreshed! 🌿");
+  setTimeout(() => window.location.reload(), 800);
+}
+
+function openExploreLightbox(src, tag, likes){
+  showToast(`Viewing ${tag} (${likes} likes) 🌿`);
+}
+
+/* ==========================================================================
+   Gemini AI Wildlife & Pet Companion Engine
+   ========================================================================== */
+let geminiMessages = [
+  {
+    sender: "assistant",
+    text: "Hello! ✦ I am your **Gemini Wildlife & Pet Assistant**. I can help you identify creatures, answer questions about pet behavior, recommend gentle first-aid, or help write inspiring captions for your community posts! How can I help you today? 🐾🌿",
+    time: "Just now"
+  }
+];
+
+function formatGeminiText(text){
+  let html = text
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/^### (.*$)/gim, '<h4 style="margin:6px 0;color:var(--text-heading)">$1</h4>')
+    .replace(/^## (.*$)/gim, '<h3 style="margin:8px 0;color:var(--text-heading)">$1</h3>')
+    .replace(/^\- (.*$)/gim, '<li style="margin-left:14px">$1</li>')
+    .replace(/\n\n/g, '<p style="margin:6px 0"></p>')
+    .replace(/\n/g, '<br>');
+  return html;
+}
+
+async function sendGeminiMessage(){
+  const input = document.getElementById("geminiChatInput");
+  const text = input ? input.value.trim() : "";
+  if(!text) return;
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  geminiMessages.push({
+    sender: "user",
+    text: text,
+    time: timeStr
+  });
+
+  input.value = "";
+  renderGeminiChatOnly();
+
+  const indicator = document.getElementById("geminiThinkingIndicator");
+  if(indicator) indicator.style.display = "block";
+  scrollGeminiChatToBottom();
+
+  const apiKey = localStorage.getItem("gemini_api_key");
+  if(apiKey){
+    // Live call to Google Gemini API
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `You are Critter Circle's friendly, expert animal and wildlife companion AI. Always respond with helpful, accurate, gentle, and heartwarming advice regarding pets, animal welfare, and nature. User query: ${text}`
+            }]
+          }]
+        })
+      });
+      const data = await response.json();
+      if(indicator) indicator.style.display = "none";
+      if(data.candidates && data.candidates[0]?.content?.parts[0]?.text){
+        const aiText = data.candidates[0].content.parts[0].text;
+        geminiMessages.push({
+          sender: "assistant",
+          text: aiText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      } else {
+        throw new Error(data.error?.message || "Invalid API response");
+      }
+    } catch(err) {
+      if(indicator) indicator.style.display = "none";
+      geminiMessages.push({
+        sender: "assistant",
+        text: `⚠️ *Note: Could not reach live Gemini API (${err.message}). Using Animal Wisdom fallback:* \n\n${generateAnimalWisdomResponse(text)}`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+    }
+  } else {
+    // Intelligent Animal Wisdom engine with realistic delay
+    setTimeout(() => {
+      if(indicator) indicator.style.display = "none";
+      const aiReply = generateAnimalWisdomResponse(text);
+      geminiMessages.push({
+        sender: "assistant",
+        text: aiReply,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+      renderGeminiChatOnly();
+    }, 1100);
+  }
+  renderGeminiChatOnly();
+}
+
+function generateAnimalWisdomResponse(query){
+  const q = query.toLowerCase();
+  if(q.includes("knead") || q.includes("purr") || q.includes("cat")){
+    return "**Why Cats Knead & Purr 🐾**\n\nCats kneading ('making biscuits') is an instinctual behavior that begins in kittenhood! When adult cats do it, it communicates:\n\n- **Deep Comfort & Security:** They feel completely safe in your presence.\n- **Scent Marking:** Cats have scent glands in their paw pads, leaving their signature of belonging.\n- **Relaxation Response:** Purring releases endorphins in cats that actually help lower blood pressure and heal tissue!\n\n*Pro-tip: Keep a soft fleece blanket on your lap so their affectionate kneading doesn't scratch your legs!* ✨";
+  } else if(q.includes("bird") || q.includes("baby bird") || q.includes("fallen")){
+    return "**Found a Baby Bird on the Ground? Here is what to do 🌿**\n\n1. **Check if it has feathers:**\n   - **Fledgling (has feathers, hopping):** Normal! Leave them alone unless in immediate danger from cats or dogs. Parents are usually nearby watching and feeding.\n   - **Nestling (naked or downy feathers):** Needs help. Look for a nest directly above and gently place the chick back if safe.\n2. **Human scent myth:** Birds have a poor sense of smell and **will NOT** reject a baby just because you touched it.\n3. **If injured or cold:** Place in a small cardboard box with a towel, keep warm and quiet, and contact a licensed wildlife rehabilitator.\n\n*Always prioritize gentle non-interference when possible!* 🍃";
+  } else if(q.includes("enrichment") || q.includes("dog") || q.includes("game")){
+    return "**5 Wonderful Mental Enrichment Games for Dogs 🐕**\n\n1. **The Muffin Tin Puzzle:** Put treats in muffin tin cups and cover them with tennis balls. Let your dog figure out how to nudge them off!\n2. **Sniff Safari (Scatter Feeding):** Scatter part of their meal in tall grass or a snuffle mat. 15 minutes of scent work tires a dog more than a 30-minute walk.\n3. **Cardboard Box Destruction:** Place treats inside a sealed toilet paper roll or small box. Tearing safe cardboard satisfies their natural foraging drive.\n4. **Name That Toy:** Teach your pup to distinguish toys by name ('Find the Hedgehog!').\n5. **Lick Mats with Frozen Yogurt & Pumpkin:** Licking releases calming serotonin.\n\n*A mentally stimulated dog is a happy, calm dog!* 🐾";
+  } else if(q.includes("story") || q.includes("fox") || q.includes("woodland")){
+    return "**A Quiet Woodland Dawn 🦊**\n\nDeep in Fernwood Reserve, morning mist hung like silver thread between the ancient cedar boughs. A young red fox with fur the color of autumn maple leaves stepped onto the damp moss.\n\nHe didn't make a sound. His whiskers twitched as a solitary chickadee called from a hemlock branch above. He paused, sitting back on his paws, watching dew droplets gather on a spider's web like tiny glass beads.\n\nThere was no chase this morning, no urgent destination. Just the quiet heartbeat of the forest waking up, and the patient knowledge that everything belongs.\n\n*Peace lives in the quiet moments we choose to witness.* 🌲✨";
+  } else if(q.includes("photo") || q.includes("camera") || q.includes("tips")){
+    return "**Ethical Wildlife & Backyard Photography Tips 📸**\n\n- **Get to Eye Level:** Always crouch or lay low. An eye-level perspective makes the creature the protagonist of the photo.\n- **Fast Shutter Speed:** Set to at least 1/1000s for birds and moving animals.\n- **Patience over Pursuit:** Never chase or corner an animal. Set up near water baths, feeders, or tree stumps and let them come to you.\n- **Golden Hour Glow:** The first and last hour of daylight creates magical rim lighting on fur and feathers.\n- **Silence your Shutter:** Use electronic silent shutter so you don't startle sensitive ears.\n\n*The best photograph is one where the animal never knew you were there.* 💚";
+  } else {
+    return `**Gemini AI Observation ✦**\n\nRegarding *"${query}"*:\n\nIn our wildlife and pet circles, observation and gentle care are our guiding principles. Every creature has unique communication signals—from subtle ear twitches to tail postures. \n\n- **Safety First:** Ensure any animal is in a calm, stress-free space.\n- **Positive Reinforcement:** High-value praise and patience always yield the strongest bond.\n- **Community Support:** Share photos and notes with our local circles for species identification and mutual support!\n\n*(You can connect a personal Google Gemini API Key in the top right for live deep web research on any species!)* 🌿`;
+  }
+}
+
+function askGeminiQuickPrompt(prompt){
+  const input = document.getElementById("geminiChatInput");
+  if(input){
+    input.value = prompt;
+    sendGeminiMessage();
+  }
+}
+
+function clearGeminiChat(){
+  geminiMessages = [
+    {
+      sender: "assistant",
+      text: "Chat cleared! ✦ How can I assist you with your furry, feathered, or wild friends today? 🐾",
+      time: "Just now"
+    }
+  ];
+  renderGeminiChatOnly();
+  showToast("Gemini chat conversation cleared");
+}
+
+function renderGeminiChatOnly(){
+  const scroll = document.getElementById("geminiChatScroll");
+  if(!scroll) return;
+  scroll.innerHTML = `
+    ${geminiMessages.map(m => `
+      <div class="gemini-message ${m.sender}">
+        ${m.sender === 'user' ? `
+          <img class="gemini-msg-avatar" src="${currentUser.avatar}" alt="You">
+        ` : `
+          <div class="gemini-ai-avatar">✦</div>
+        `}
+        <div class="gemini-msg-body">
+          ${formatGeminiText(m.text)}
+          <div class="gemini-msg-time">${m.time}</div>
+        </div>
+      </div>
+    `).join("")}
+    <div class="gemini-thinking" id="geminiThinkingIndicator">
+      ✦ Gemini is thinking &amp; observing...
+    </div>
+  `;
+  scrollGeminiChatToBottom();
+}
+
+function scrollGeminiChatToBottom(){
+  setTimeout(() => {
+    const el = document.getElementById("geminiChatScroll");
+    if(el) el.scrollTop = el.scrollHeight;
+  }, 40);
+}
+
+function openGeminiKeyModal(){
+  const input = document.getElementById("geminiApiKeyInput");
+  if(input) input.value = localStorage.getItem("gemini_api_key") || "";
+  document.getElementById("geminiKeyModal").classList.add("open");
+}
+
+function closeGeminiKeyModal(){
+  document.getElementById("geminiKeyModal").classList.remove("open");
+}
+
+function saveGeminiKey(){
+  const input = document.getElementById("geminiApiKeyInput");
+  const key = input ? input.value.trim() : "";
+  if(key){
+    localStorage.setItem("gemini_api_key", key);
+    showToast("Google Gemini API Key saved successfully! ✦");
+  } else {
+    localStorage.removeItem("gemini_api_key");
+    showToast("Gemini API Key removed. Using built-in animal wisdom mode.");
+  }
+  closeGeminiKeyModal();
+  if(currentPage === "gemini"){
+    document.getElementById("content").innerHTML = geminiPageHTML();
+  }
+}
+
+function removeGeminiKey(){
+  localStorage.removeItem("gemini_api_key");
+  const input = document.getElementById("geminiApiKeyInput");
+  if(input) input.value = "";
+  showToast("Gemini API Key cleared");
+  closeGeminiKeyModal();
+  if(currentPage === "gemini"){
+    document.getElementById("content").innerHTML = geminiPageHTML();
+  }
+}
+
+function generateGeminiCaption(){
+  const captionInput = document.getElementById("postCaption");
+  const tagsInput = document.getElementById("postTags");
+
+  const captions = [
+    {
+      caption: "Every trail leaves an impression, but moments like this remind us to breathe in the pine scent and match the forest's pace.",
+      tags: "#WildTrail #WoodlandMagic #NatureWhisper #Fernwood"
+    },
+    {
+      caption: "Sunbeams find the gentlest souls first. A peaceful pause in the middle of a bustling world.",
+      tags: "#GoldenHourPaws #SunbeamSociety #KindMoments"
+    },
+    {
+      caption: "Observation without hurry: the quiet magic of noticing life unfolding in the ferns.",
+      tags: "#CritterCircle #WildlifeObservation #GentleEncounters"
+    },
+    {
+      caption: "Some creatures bring pure sunshine wherever their paws touch the soil.",
+      tags: "#SoftPawsClub #AnimalJoy #DailyKindness"
+    }
+  ];
+
+  const pick = captions[Math.floor(Math.random() * captions.length)];
+  if(captionInput) captionInput.value = pick.caption;
+  if(tagsInput) tagsInput.value = pick.tags;
+
+  showToast("Caption & tags crafted with Gemini AI! ✦", "✨");
+}
+
+/* ==========================================================================
+   NexusAuth Login & Session Engine
+   ========================================================================== */
+let authCurrentTab = 'login';
+isLoggedIn = false;
+
+function updateTopAuthUI(){
+  const label = document.getElementById("topAuthLabel");
+  const icon = document.getElementById("topAuthIcon");
+  const sideText = document.getElementById("sideAuthText");
+  const sideIcon = document.getElementById("sideAuthIcon");
+  const topAvatar = document.getElementById("topbarAvatar");
+  if(topAvatar) topAvatar.src = currentUser.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80";
+
+  if(isLoggedIn && currentUser.name){
+    const firstName = currentUser.name.split(' ')[0];
+    if(label) label.textContent = firstName;
+    if(icon) icon.textContent = "✓";
+    if(sideText) sideText.textContent = `${firstName} (Sign Out)`;
+    if(sideIcon) sideIcon.textContent = "🚪";
+  } else {
+    if(label) label.textContent = "Sign In";
+    if(icon) icon.textContent = "🔑";
+    if(sideText) sideText.textContent = "Sign In";
+    if(sideIcon) sideIcon.textContent = "👤";
+  }
+}
+
+function openAuthModal(){
+  document.getElementById("authModal").classList.add("open");
+}
+
+function closeAuthModal(){
+  document.getElementById("authModal").classList.remove("open");
+}
+
+function switchAuthTab(tab){
+  authCurrentTab = tab;
+  const isLogin = tab === 'login';
+
+  document.getElementById("tabBtnLogin").classList.toggle("active", isLogin);
+  document.getElementById("tabBtnSignup").classList.toggle("active", !isLogin);
+  document.getElementById("groupFullName").style.display = isLogin ? "none" : "block";
+  document.getElementById("groupConfirmPassword").style.display = isLogin ? "none" : "block";
+  document.getElementById("authModalTitle").textContent = isLogin ? "Welcome Back" : "Create Account";
+  document.getElementById("authModalSubtitle").textContent = isLogin ? "Sign in to your Critter Circle & Supabase account" : "Join our community of wildlife and pet lovers";
+  document.getElementById("authSubmitBtnText").textContent = isLogin ? "Sign In to Circle" : "Create Free Account";
+
+  const meter = document.getElementById("authStrengthMeter");
+  if(meter) meter.style.display = isLogin ? "none" : "block";
+}
+
+function switchPageAuthTab(tab){
+  authCurrentTab = tab;
+  const isLogin = tab === 'login';
+
+  const tabLogin = document.getElementById("pageTabLogin");
+  const tabSignup = document.getElementById("pageTabSignup");
+  if(tabLogin && tabSignup){
+    tabLogin.classList.toggle("active", isLogin);
+    tabSignup.classList.toggle("active", !isLogin);
+  }
+  const groupName = document.getElementById("pageGroupFullName");
+  const groupConfirm = document.getElementById("pageGroupConfirmPassword");
+  if(groupName) groupName.style.display = isLogin ? "none" : "block";
+  if(groupConfirm) groupConfirm.style.display = isLogin ? "none" : "block";
+
+  const title = document.getElementById("authPageTitle");
+  if(title) title.textContent = isLogin ? "Welcome to Critter Circle" : "Join Critter Circle Today";
+
+  const btnText = document.getElementById("pageAuthSubmitBtnText");
+  if(btnText) btnText.textContent = isLogin ? "Sign In to Circle" : "Create Free Account";
+
+  const meter = document.getElementById("pageAuthStrengthMeter");
+  if(meter) meter.style.display = isLogin ? "none" : "block";
+}
+
+function handlePasswordInput(val, prefix=''){
+  const meter = document.getElementById(prefix ? `${prefix}AuthStrengthMeter` : "authStrengthMeter");
+  if(meter) meter.style.display = authCurrentTab === 'signup' && val ? "block" : "none";
+
+  let strength = 0;
+  if(val.length >= 6) strength++;
+  if(/[A-Z]/.test(val) && /[a-z]/.test(val)) strength++;
+  if(/[0-9]/.test(val)) strength++;
+  if(/[^A-Za-z0-9]/.test(val)) strength++;
+
+  const bars = [
+    document.getElementById(prefix ? `${prefix}StrBar1` : "strBar1"),
+    document.getElementById(prefix ? `${prefix}StrBar2` : "strBar2"),
+    document.getElementById(prefix ? `${prefix}StrBar3` : "strBar3"),
+    document.getElementById(prefix ? `${prefix}StrBar4` : "strBar4")
+  ];
+
+  const labels = ["None", "Weak", "Fair", "Good", "Strong"];
+  const classes = ["", "weak", "fair", "good", "strong"];
+
+  bars.forEach((b, i) => {
+    if(!b) return;
+    b.className = "strength-bar";
+    if(i < strength){
+      b.classList.add(classes[strength]);
+    }
+  });
+
+  const labelEl = document.getElementById(prefix ? `${prefix}StrLabel` : "strLabel");
+  if(labelEl) labelEl.textContent = labels[strength];
+}
+
+function togglePasswordVis(inputId, btn){
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  const isPass = input.type === "password";
+  input.type = isPass ? "text" : "password";
+  if(btn){
+    const eyeOpen = btn.querySelector(".eye-open");
+    const eyeClosed = btn.querySelector(".eye-closed");
+    if(eyeOpen && eyeClosed){
+      eyeOpen.style.display = isPass ? "none" : "block";
+      eyeClosed.style.display = isPass ? "block" : "none";
+    } else {
+      btn.textContent = isPass ? "🙈" : "👁";
+    }
+    btn.setAttribute("aria-label", isPass ? "Hide password" : "Show password");
+  }
+}
+
+async function handleAuthSubmit(e, isPage=false){
+  e.preventDefault();
+  const prefix = isPage ? "pageAuth" : "auth";
+  const email = document.getElementById(`${prefix}Email`).value.trim();
+  const password = document.getElementById(`${prefix}Password`).value;
+  const fullNameInput = document.getElementById(`${prefix}FullName`);
+  const fullName = fullNameInput ? fullNameInput.value.trim() : "";
+
+  if(!email || !password){
+    showToast("Please enter email and password", "⚠️");
+    return;
+  }
+  if(password.length < 6){
+    showToast("Password must be at least 6 characters", "⚠️");
+    return;
+  }
+
+  const name = fullName || (email.includes("alex") ? "Alex Carter" : email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, l => l.toUpperCase()));
+  const handle = "@" + name.toLowerCase().replace(/[^a-z0-9_]/g, ".");
+
+  currentUser = {
+    name: name,
+    handle: handle,
+    email: email,
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80",
+    bio: "Animal lover & nature notes 🌿 Rescuing smiles one paw at a time.",
+    stats: { posts: 14, followers: "920", following: "215" }
+  };
+  isLoggedIn = true;
+
+  localStorage.setItem("critter_auth_user", JSON.stringify(currentUser));
+  unlockApp();
+  if(!isPage) closeAuthModal();
+  showToast(`Welcome back, ${name}! 🌿`, "🎉");
+}
+
+function handleSocialAuth(provider){
+  const name = provider === 'google' ? "Google Nature Explorer" : "GitHub Wildlife Dev";
+  const handle = provider === 'google' ? "@google_explorer" : "@github_dev";
+  currentUser = {
+    name: name,
+    handle: handle,
+    email: `${provider}_user@crittercircle.com`,
+    avatar: provider === 'google' 
+      ? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80" 
+      : "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=120&q=80",
+    bio: `Animal enthusiast signed in via ${provider.charAt(0).toUpperCase() + provider.slice(1)} 🌿`,
+    stats: { posts: 4, followers: "310", following: "88" }
+  };
+  isLoggedIn = true;
+
+  localStorage.setItem("critter_auth_user", JSON.stringify(currentUser));
+  unlockApp();
+  closeAuthModal();
+  showToast(`Signed in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}! 🌿`, "🎉");
+}
+
+function openForgotPassword(){
+  const email = prompt("Enter your email address to receive password reset link:");
+  if(email){
+    showToast(`Password reset link sent to ${email} ✉`);
+  }
+}
+
+function handleSignOut(){
+  localStorage.removeItem("critter_auth_user");
+  isLoggedIn = false;
+  currentUser = { ...defaultGuestUser };
+  lockApp();
+  showToast("You have been signed out. Please sign in to continue. 🐾");
+}
+
+function handleAuthButtonClick(){
+  if(isLoggedIn){
+    if(confirm("Do you want to sign out of Critter Circle?")){
+      handleSignOut();
+    }
+  } else {
+    lockApp();
+  }
+}
+
+/* ==========================================================================
+   Full-Screen Authentication Gatekeeper Logic
+   ========================================================================== */
+let gateCurrentTab = 'login';
+
+function switchGateTab(tab){
+  gateCurrentTab = tab;
+  const isLogin = tab === 'login';
+
+  const tabLogin = document.getElementById("gateTabLogin");
+  const tabSignup = document.getElementById("gateTabSignup");
+  if(tabLogin && tabSignup){
+    tabLogin.classList.toggle("active", isLogin);
+    tabSignup.classList.toggle("active", !isLogin);
+  }
+
+  const groupName = document.getElementById("gateGroupFullName");
+  const groupConfirm = document.getElementById("gateGroupConfirmPassword");
+  if(groupName) groupName.style.display = isLogin ? "none" : "block";
+  if(groupConfirm) groupConfirm.style.display = isLogin ? "none" : "block";
+
+  const title = document.getElementById("gateTitle");
+  if(title) title.textContent = isLogin ? "Welcome to Critter Circle" : "Join Critter Circle Today";
+
+  const subtitle = document.getElementById("gateSubtitle");
+  if(subtitle) subtitle.textContent = isLogin ? "Sign in to access your creature feed, pet circles & Gemini AI" : "Create an account to share moments, connect with animal lovers & chat with AI";
+
+  const btnText = document.getElementById("gateSubmitBtnText");
+  if(btnText) btnText.textContent = isLogin ? "Sign In to Enter App" : "Create Account & Enter";
+
+  const switchText = document.getElementById("gateSwitchText");
+  const switchLink = document.getElementById("gateSwitchLink");
+  if(switchText) switchText.textContent = isLogin ? "Don't have an account?" : "Already have an account?";
+  if(switchLink) switchLink.textContent = isLogin ? "Sign up" : "Sign in";
+
+  const meter = document.getElementById("gateStrengthMeter");
+  if(meter) meter.style.display = isLogin ? "none" : "block";
+
+  ["gateErrorEmail", "gateErrorPassword", "gateErrorFullName", "gateErrorConfirmPassword"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = "";
+  });
+}
+
+function toggleGateMode(){
+  switchGateTab(gateCurrentTab === 'login' ? 'signup' : 'login');
+}
+
+function handleGatePasswordInput(val){
+  const meter = document.getElementById("gateStrengthMeter");
+  if(meter) meter.style.display = gateCurrentTab === 'signup' && val ? "block" : "none";
+
+  let strength = 0;
+  if(val.length >= 6) strength++;
+  if(val.length >= 9) strength++;
+  if(/[A-Z]/.test(val) && /[0-9]/.test(val)) strength++;
+  if(/[^A-Za-z0-9]/.test(val)) strength++;
+
+  const bars = [
+    document.getElementById("gateStrBar1"),
+    document.getElementById("gateStrBar2"),
+    document.getElementById("gateStrBar3"),
+    document.getElementById("gateStrBar4")
+  ];
+  const classes = ["", "weak", "fair", "good", "strong"];
+  const labels = ["None", "Weak", "Fair", "Good", "Strong"];
+
+  bars.forEach((b, idx) => {
+    if(!b) return;
+    b.className = "strength-bar";
+    if(idx < strength){
+      b.classList.add(classes[strength]);
+    }
+  });
+
+  const labelEl = document.getElementById("gateStrLabel");
+  if(labelEl) labelEl.textContent = labels[strength];
+}
+
+function autoFillGateMockCredentials(){
+  const emailInp = document.getElementById("gateEmail");
+  const passInp = document.getElementById("gatePassword");
+  if(gateCurrentTab !== 'login') switchGateTab('login');
+  if(emailInp){
+    emailInp.value = "alex@example.com";
+  }
+  if(passInp){
+    passInp.value = "Nexus@2026!";
+    handleGatePasswordInput("Nexus@2026!");
+  }
+  showToast("Filled mock credentials: alex@example.com ⚡", "🔑");
+}
+
+function copyMockField(field){
+  const val = field === 'email' ? 'alex@example.com' : 'Nexus@2026!';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(val).then(() => {
+      showToast(`Copied ${field} to clipboard! 📋`, "✓");
+    }).catch(() => {
+      showToast(`Mock ${field}: ${val}`, "📋");
+    });
+  } else {
+    showToast(`Mock ${field}: ${val}`, "📋");
+  }
+}
+
+function handleGateAuthSubmit(e){
+  if(e && e.preventDefault) e.preventDefault();
+  const emailInp = document.getElementById("gateEmail");
+  const passInp = document.getElementById("gatePassword");
+  const nameInp = document.getElementById("gateFullName");
+  const confirmInp = document.getElementById("gateConfirmPassword");
+
+  const email = emailInp ? emailInp.value.trim() : "";
+  const password = passInp ? passInp.value : "";
+  const fullName = nameInp ? nameInp.value.trim() : "";
+  const confirmPass = confirmInp ? confirmInp.value : "";
+
+  // Validation
+  let hasError = false;
+  const errEmail = document.getElementById("gateErrorEmail");
+  const errPass = document.getElementById("gateErrorPassword");
+  const errName = document.getElementById("gateErrorFullName");
+  const errConfirm = document.getElementById("gateErrorConfirmPassword");
+
+  if(errEmail) errEmail.textContent = "";
+  if(errPass) errPass.textContent = "";
+  if(errName) errName.textContent = "";
+  if(errConfirm) errConfirm.textContent = "";
+
+  if(gateCurrentTab === 'signup' && !fullName){
+    if(errName) errName.textContent = "Full name is required";
+    hasError = true;
+  }
+
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    if(errEmail) errEmail.textContent = "Please enter a valid email address";
+    hasError = true;
+  }
+
+  if(!password || password.length < 6){
+    if(errPass) errPass.textContent = "Password must be at least 6 characters";
+    hasError = true;
+  }
+
+  if(gateCurrentTab === 'signup' && password !== confirmPass){
+    if(errConfirm) errConfirm.textContent = "Passwords do not match";
+    hasError = true;
+  }
+
+  if(hasError) return false;
+
+  const displayName = fullName || (email.includes("alex") ? "Alex Carter" : email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, l => l.toUpperCase()));
+  const handle = "@" + displayName.toLowerCase().replace(/[^a-z0-9_]/g, ".");
+
+  currentUser = {
+    name: displayName,
+    handle: handle,
+    email: email,
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80",
+    bio: "Animal lover & nature notes 🌿 Rescuing smiles one paw at a time.",
+    stats: { posts: 14, followers: "920", following: "215" }
+  };
+
+  isLoggedIn = true;
+  localStorage.setItem("critter_auth_user", JSON.stringify(currentUser));
+
+  unlockApp();
+  showToast(`Welcome to Critter Circle, ${displayName}! 🌿`, "🎉");
+  return false;
+}
+
+function handleSocialGateAuth(provider){
+  const isGoogle = provider === 'google';
+  const name = isGoogle ? "Google Nature Explorer" : "GitHub Wildlife Dev";
+  const handle = isGoogle ? "@google_explorer" : "@github_dev";
+
+  currentUser = {
+    name: name,
+    handle: handle,
+    email: `${provider}_user@crittercircle.com`,
+    avatar: isGoogle 
+      ? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80" 
+      : "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=120&q=80",
+    bio: `Animal enthusiast signed in via ${isGoogle ? 'Google' : 'GitHub'} 🌿`,
+    stats: { posts: 4, followers: "310", following: "88" }
+  };
+
+  isLoggedIn = true;
+  localStorage.setItem("critter_auth_user", JSON.stringify(currentUser));
+
+  unlockApp();
+  showToast(`Signed in with ${isGoogle ? 'Google' : 'GitHub'}! 🌿`, "🎉");
+}
+
+function unlockApp(){
+  isLoggedIn = true;
+  const gate = document.getElementById("authGateScreen");
+  if(gate){
+    gate.style.opacity = "0";
+    gate.style.pointerEvents = "none";
+    setTimeout(() => {
+      gate.style.display = "none";
+    }, 350);
+  }
+  const appEl = document.querySelector(".app");
+  if(appEl) appEl.classList.remove("app-locked");
+
+  updateTopAuthUI();
+  showPage("home");
+}
+
+function lockApp(){
+  isLoggedIn = false;
+  localStorage.removeItem("critter_auth_user");
+  currentUser = { ...defaultGuestUser };
+
+  // Close modals
+  closeAuthModal();
+  closeCreateModal();
+  closeEditProfileModal();
+  closeStoryViewer();
+
+  const gate = document.getElementById("authGateScreen");
+  if(gate){
+    gate.style.display = "flex";
+    gate.style.opacity = "1";
+    gate.style.pointerEvents = "auto";
+  }
+  const appEl = document.querySelector(".app");
+  if(appEl) appEl.classList.add("app-locked");
+
+  updateTopAuthUI();
+}
+
+function initSupabaseAuth(){
+  const url = (typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.url : '');
+  const key = (typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.anonKey : '');
+  const indicator = document.getElementById("supabaseIndicator");
+  const indicatorText = document.getElementById("supabaseIndicatorText");
+
+  if(url && key && window.supabase){
+    try {
+      const client = window.supabase.createClient(url, key);
+      if(indicator) indicator.style.background = "#10b981";
+      if(indicatorText) indicatorText.textContent = "Supabase Connected";
+    } catch(e) {
+      if(indicatorText) indicatorText.textContent = "Local Auth Mode";
+    }
+  } else {
+    if(indicatorText) indicatorText.textContent = "Local & Mock Ready";
+  }
+}
+
+/* ==========================================================================
+   Initialization on Load - Strict Auth Gatekeeper
+   ========================================================================== */
+window.addEventListener("DOMContentLoaded", () => {
+  initTheme();
+  renderSuggestedCircles();
+  updateBadgeCounts();
+
+  // Strict Auth Guard: check if an active authenticated user session exists
+  isLoggedIn = false;
+  try {
+    const saved = localStorage.getItem("critter_auth_user");
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(parsed && parsed.email){
+        Object.assign(currentUser, parsed);
+        isLoggedIn = true;
+      }
+    }
+  } catch(e) {
+    isLoggedIn = false;
+  }
+
+  initSupabaseAuth();
+
+  if(isLoggedIn){
+    unlockApp();
+  } else {
+    lockApp();
+  }
+});
+</script>
+</body>
+</html>
